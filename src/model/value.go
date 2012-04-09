@@ -68,9 +68,7 @@ func (v *RegisterValue) Write(ctx Context, word Word) {
 }
 
 func (v *RegisterValue) Read(ctx Context) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return ctx.Register(v.Reg)
 }
 
 func (v *RegisterValue) String() string {
@@ -185,14 +183,11 @@ type SpValue struct {
 }
 
 func (v SpValue) Write(ctx Context, word Word) {
-	// TODO
-	panic("unimplemented")
+	ctx.WriteSP(word)
 }
 
 func (v SpValue) Read(ctx Context) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return ctx.SP()
 }
 
 func (v SpValue) String() string {
@@ -205,14 +200,11 @@ type PcValue struct {
 }
 
 func (v PcValue) Write(ctx Context, word Word) {
-	// TODO
-	panic("unimplemented")
+	ctx.WritePC(word)
 }
 
 func (v PcValue) Read(ctx Context) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return ctx.PC()
 }
 
 func (v PcValue) String() string {
@@ -225,14 +217,11 @@ type OValue struct {
 }
 
 func (v OValue) Write(ctx Context, word Word) {
-	// TODO
-	panic("unimplemented")
+	ctx.WriteO(word)
 }
 
 func (v OValue) Read(ctx Context) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return ctx.O()
 }
 
 func (v OValue) String() string {
@@ -249,9 +238,7 @@ func (v *AddressValue) Write(ctx Context, word Word) {
 }
 
 func (v *AddressValue) Read(ctx Context) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return ctx.ReadMemory(v.extraWord.Value)
 }
 
 func (v *AddressValue) String() string {
@@ -264,8 +251,7 @@ type WordValue struct {
 }
 
 func (v *WordValue) Write(ctx Context, word Word) {
-	// TODO
-	panic("unimplemented")
+	// No-op.
 }
 
 func (v *WordValue) Read(ctx Context) Word {
@@ -283,14 +269,11 @@ type LiteralValue struct {
 }
 
 func (v *LiteralValue) Write(ctx Context, word Word) {
-	// TODO
-	panic("unimplemented")
+	// No-op.
 }
 
 func (v *LiteralValue) Read(ctx Context) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return v.Literal
 }
 
 func (v *LiteralValue) String() string {
