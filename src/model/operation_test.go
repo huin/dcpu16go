@@ -58,7 +58,11 @@ func TestOperationFromWord(t *testing.T) {
 
 	for _, test := range tests {
 		wordLoader := &FakeWordLoader{t, test.Words, 0}
-		op := OperationFromWord(wordLoader.WordLoad())
+		op, err := OperationFromWord(wordLoader.WordLoad())
+		if err != nil {
+			t.Errorf("Operation %#v returned error %v", test.Words, err)
+			continue
+		}
 		expectedNumWordsRead := len(test.Words) - 1
 		op.LoadNextWords(wordLoader)
 		numWordsRead := wordLoader.Loc - 1
