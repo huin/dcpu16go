@@ -245,8 +245,7 @@ type AddressValue struct {
 }
 
 func (v *AddressValue) Write(ctx Context, word Word) {
-	// TODO
-	panic("unimplemented")
+	ctx.WriteMemory(v.extraWord.Value, word)
 }
 
 func (v *AddressValue) Read(ctx Context) Word {

@@ -31,8 +31,8 @@ func CPUEquals(a, b CPU) bool {
 }
 
 type Memory interface {
-	Read(address Word) Word
-	Write(address Word, value Word)
+	ReadMemory(address Word) Word
+	WriteMemory(address Word, value Word)
 }
 
 type Context interface {
@@ -51,5 +51,5 @@ func (ctx *StandardContext) Init() {
 }
 
 func (ctx *StandardContext) WordLoad() Word {
-	return ctx.MemoryState.Read(ctx.ReadIncPC())
+	return ctx.MemoryState.ReadMemory(ctx.ReadIncPC())
 }

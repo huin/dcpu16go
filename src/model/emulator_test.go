@@ -17,9 +17,16 @@ func TestStep(t *testing.T) {
 		{
 			Name:     "SET A, 0x0030",
 			NumSteps: 1,
-			InitMem:  []Word{0x7c01, 0x0030}, // SET A, 0x0030
+			InitMem:  []Word{0x7c01, 0x0030},
 			ExpCPU:   CPUState{registers: [8]Word{0x0030, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0002, sp: 0xffff},
 			ExpMem:   []Word{0x7c01, 0x0030},
+		},
+		{
+			Name:     "SET [0x0003], 0xbeef",
+			NumSteps: 1,
+			InitMem:  []Word{0x7de1, 0x0003, 0xbeef, 0x0000},
+			ExpCPU:   CPUState{registers: [8]Word{0, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0003, sp: 0xffff},
+			ExpMem:   []Word{0x7de1, 0x0003, 0xbeef, 0xbeef},
 		},
 	}
 
@@ -38,6 +45,15 @@ func TestStep(t *testing.T) {
 			t.Errorf("%s: CPU state", test.Name)
 			t.Errorf("expected: %#v", test.ExpCPU)
 			t.Errorf("got:      %#v", ctx.CPUState)
+		}
+
+		for i := range test.ExpMem {
+			if test.ExpMem[i] != ctx.MemoryState.Data[i] {
+				t.Errorf("%s: memory state", test.Name)
+				t.Errorf("expected: %#v", test.ExpMem)
+				t.Errorf("got:      %#v", ctx.MemoryState.Data[:len(test.ExpMem)])
+				break
+			}
 		}
 	}
 }
