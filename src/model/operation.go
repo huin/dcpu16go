@@ -10,7 +10,16 @@ type Operation interface {
 	String() string
 }
 
-func OperationFromWord(w Word) (Operation, error) {
+func OperationLoad(wordLoader WordLoader) (Operation, error) {
+	op, err := operationFromWord(wordLoader.WordLoad())
+	if err != nil {
+		return nil, err
+	}
+	op.LoadNextWords(wordLoader)
+	return op, err
+}
+
+func operationFromWord(w Word) (Operation, error) {
 	opCode := w & 0x000f
 	if opCode == 0x0 {
 		// Non-basic instruction.

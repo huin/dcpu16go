@@ -23,7 +23,7 @@ func (l *FakeWordLoader) exhausted() bool {
 	return l.Loc == len(l.Words)
 }
 
-func TestOperationFromWord(t *testing.T) {
+func TestOperationLoad(t *testing.T) {
 	type T struct {
 		Expected string
 		Words    []Word
@@ -58,18 +58,13 @@ func TestOperationFromWord(t *testing.T) {
 
 	for _, test := range tests {
 		wordLoader := &FakeWordLoader{t, test.Words, 0}
-		op, err := OperationFromWord(wordLoader.WordLoad())
+		op, err := OperationLoad(wordLoader)
 		if err != nil {
 			t.Errorf("Operation %#v returned error %v", test.Words, err)
 			continue
 		}
-		expectedNumWordsRead := len(test.Words) - 1
-		op.LoadNextWords(wordLoader)
-		numWordsRead := wordLoader.Loc - 1
-		if expectedNumWordsRead != numWordsRead {
-			t.Errorf(
-				"Operation %v (%#v) disagrees on number of following words (expected %d, got %d)",
-				op, test.Words, expectedNumWordsRead, numWordsRead)
+		if !wordLoader.exhausted() {
+			t.Errorf("Operation %v (%#v) did not exaust words to load", op, test.Words)
 			continue
 		}
 		str := op.String()
