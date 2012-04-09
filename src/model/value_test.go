@@ -31,16 +31,15 @@ func TestNoValueString(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		value := ValueFromWord(test.ValueWord)
-		hasNextWord := value.HasNextWord()
-		if test.HasNextWord != hasNextWord {
-			t.Errorf(
-				"Value %v (%02x) disagrees on HasNextWord (expected %t, got %t)",
-				value, test.ValueWord, test.HasNextWord, hasNextWord)
-			continue
+		wordLoader := &FakeWordLoader{t: t}
+		if test.HasNextWord {
+			wordLoader.Words = []Word{test.NextWord}
 		}
-		if hasNextWord {
-			value.LoadOpValue(test.NextWord)
+		value := ValueFromWord(test.ValueWord)
+		value.LoadOpValue(wordLoader)
+		if !wordLoader.exhausted() {
+			t.Errorf("Value %v (%02x) did not consume next word",
+				value, test.ValueWord)
 		}
 		str := value.String()
 		if test.Expected != str {

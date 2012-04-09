@@ -70,9 +70,7 @@ type uniaryOp struct {
 }
 
 func (o *uniaryOp) LoadNextWords(wordLoader WordLoader) {
-	if o.A.HasNextWord() {
-		o.A.LoadOpValue(wordLoader.WordLoad())
-	}
+	o.A.LoadOpValue(wordLoader)
 }
 
 func (o *uniaryOp) format(name string) string {
@@ -95,12 +93,8 @@ type binaryOp struct {
 }
 
 func (o *binaryOp) LoadNextWords(wordLoader WordLoader) {
-	if o.A.HasNextWord() {
-		o.A.LoadOpValue(wordLoader.WordLoad())
-	}
-	if o.B.HasNextWord() {
-		o.B.LoadOpValue(wordLoader.WordLoad())
-	}
+	o.A.LoadOpValue(wordLoader)
+	o.B.LoadOpValue(wordLoader)
 }
 
 func (o *binaryOp) format(name string) string {

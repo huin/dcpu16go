@@ -5,8 +5,7 @@ import "fmt"
 type Value interface {
 	//Write(Context, Word)
 	//Read(Context) Word
-	LoadOpValue(Word)
-	HasNextWord() bool
+	LoadOpValue(WordLoader)
 	String() string
 }
 
@@ -20,9 +19,9 @@ func ValueFromWord(w Word) Value {
 	case 0x00 <= w && w <= 0x07:
 		return &RegisterValue{Reg: RegisterId(w)}
 	case 0x08 <= w && w <= 0x0f:
-		return &RegisterAddressValue{Reg: RegisterId(w-0x08)}
+		return &RegisterAddressValue{Reg: RegisterId(w - 0x08)}
 	case 0x10 <= w && w <= 0x17:
-		return &RegisterRelAddressValue{Reg: RegisterId(w-0x10)}
+		return &RegisterRelAddressValue{Reg: RegisterId(w - 0x10)}
 	case 0x18 == w:
 		return PopValue{}
 	case 0x19 == w:
@@ -40,31 +39,22 @@ func ValueFromWord(w Word) Value {
 	case 0x1f == w:
 		return &WordValue{}
 	case 0x20 <= w && w <= 0x3f:
-		return &LiteralValue{Literal: w-0x20}
+		return &LiteralValue{Literal: w - 0x20}
 	}
 	panic(fmt.Errorf("Value code 0x%02x out of range", w))
 }
 
-type noExtraWord struct {}
+type noExtraWord struct{}
 
-func (v noExtraWord) HasNextWord() bool {
-	return false
-}
-
-func (v noExtraWord) LoadOpValue(Word) {
-	panic("unexpected LoadOpValue")
+func (v noExtraWord) LoadOpValue(WordLoader) {
 }
 
 type extraWord struct {
 	Value Word
 }
 
-func (v *extraWord) HasNextWord() bool {
-	return true
-}
-
-func (v *extraWord) LoadOpValue(w Word) {
-	v.Value = w
+func (v *extraWord) LoadOpValue(wordLoader WordLoader) {
+	v.Value = wordLoader.WordLoad()
 }
 
 // 0x00-0x07: register
@@ -90,7 +80,7 @@ func (v *RegisterAddressValue) String() string {
 // 0x10-0x17: [next word + register]
 type RegisterRelAddressValue struct {
 	extraWord
-	Reg   RegisterId
+	Reg RegisterId
 }
 
 func (v *RegisterRelAddressValue) String() string {

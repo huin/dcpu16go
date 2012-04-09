@@ -19,16 +19,20 @@ func (l *FakeWordLoader) WordLoad() Word {
 	return w
 }
 
+func (l *FakeWordLoader) exhausted() bool {
+	return l.Loc == len(l.Words)
+}
+
 func TestOperationFromWord(t *testing.T) {
 	type T struct {
-		Expected     string
-		Words        []Word
+		Expected string
+		Words    []Word
 	}
 
 	// Test examples taken from dcpu-16.txt, and modified such that literal lengths
 	// indicate "next word" (4 hex digits) vs "embedded literal" (2 hex digits),
 	// and replacing labels with address values.
-	tests := []T {
+	tests := []T{
 		// Try some basic stuff
 		{"SET A, 0x0030", []Word{0x7c01, 0x0030}},
 		{"SET [0x1000], 0x0020", []Word{0x7de1, 0x1000, 0x0020}},
@@ -55,9 +59,9 @@ func TestOperationFromWord(t *testing.T) {
 	for _, test := range tests {
 		wordLoader := &FakeWordLoader{t, test.Words, 0}
 		op := OperationFromWord(wordLoader.WordLoad())
-		expectedNumWordsRead := len(test.Words)-1
+		expectedNumWordsRead := len(test.Words) - 1
 		op.LoadNextWords(wordLoader)
-		numWordsRead := wordLoader.Loc-1
+		numWordsRead := wordLoader.Loc - 1
 		if expectedNumWordsRead != numWordsRead {
 			t.Errorf(
 				"Operation %v (%#v) disagrees on number of following words (expected %d, got %d)",
