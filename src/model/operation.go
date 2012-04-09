@@ -6,7 +6,7 @@ import (
 
 type Operation interface {
 	LoadNextWords(WordLoader)
-	//Execute(Context) Ticks
+	Execute(Context) // TODO Return ticks.
 	String() string
 }
 
@@ -89,6 +89,10 @@ type JsrOp struct {
 	uniaryOp
 }
 
+func (o *JsrOp) Execute(ctx Context) {
+	// TODO
+}
+
 func (o *JsrOp) String() string {
 	return o.uniaryOp.format("JSR")
 }
@@ -113,6 +117,10 @@ type SetOp struct {
 	binaryOp
 }
 
+func (o *SetOp) Execute(ctx Context) {
+	o.A.Write(ctx, o.B.Read(ctx))
+}
+
 func (o *SetOp) String() string {
 	return o.binaryOp.format("SET")
 }
@@ -120,6 +128,10 @@ func (o *SetOp) String() string {
 // 0x2: ADD a, b - sets a to a+b, sets O to 0x0001 if there's an overflow, 0x0 otherwise
 type AddOp struct {
 	binaryOp
+}
+
+func (o *AddOp) Execute(ctx Context) {
+	// TODO
 }
 
 func (o *AddOp) String() string {
@@ -131,6 +143,10 @@ type SubOp struct {
 	binaryOp
 }
 
+func (o *SubOp) Execute(ctx Context) {
+	// TODO
+}
+
 func (o *SubOp) String() string {
 	return o.binaryOp.format("SUB")
 }
@@ -138,6 +154,10 @@ func (o *SubOp) String() string {
 // 0x4: MUL a, b - sets a to a*b, sets O to ((a*b)>>16)&0xffff
 type MulOp struct {
 	binaryOp
+}
+
+func (o *MulOp) Execute(ctx Context) {
+	// TODO
 }
 
 func (o *MulOp) String() string {
@@ -149,6 +169,10 @@ type DivOp struct {
 	binaryOp
 }
 
+func (o *DivOp) Execute(ctx Context) {
+	// TODO
+}
+
 func (o *DivOp) String() string {
 	return o.binaryOp.format("DIV")
 }
@@ -156,6 +180,10 @@ func (o *DivOp) String() string {
 // 0x6: MOD a, b - sets a to a%b. if b==0, sets a to 0 instead.
 type ModOp struct {
 	binaryOp
+}
+
+func (o *ModOp) Execute(ctx Context) {
+	// TODO
 }
 
 func (o *ModOp) String() string {
@@ -167,6 +195,10 @@ type ShlOp struct {
 	binaryOp
 }
 
+func (o *ShlOp) Execute(ctx Context) {
+	// TODO
+}
+
 func (o *ShlOp) String() string {
 	return o.binaryOp.format("SHL")
 }
@@ -174,6 +206,10 @@ func (o *ShlOp) String() string {
 // 0x8: SHR a, b - sets a to a>>b, sets O to ((a<<16)>>b)&0xffff
 type ShrOp struct {
 	binaryOp
+}
+
+func (o *ShrOp) Execute(ctx Context) {
+	// TODO
 }
 
 func (o *ShrOp) String() string {
@@ -185,6 +221,10 @@ type AndOp struct {
 	binaryOp
 }
 
+func (o *AndOp) Execute(ctx Context) {
+	// TODO
+}
+
 func (o *AndOp) String() string {
 	return o.binaryOp.format("AND")
 }
@@ -192,6 +232,10 @@ func (o *AndOp) String() string {
 // 0xa: BOR a, b - sets a to a|b
 type BorOp struct {
 	binaryOp
+}
+
+func (o *BorOp) Execute(ctx Context) {
+	// TODO
 }
 
 func (o *BorOp) String() string {
@@ -203,6 +247,10 @@ type XorOp struct {
 	binaryOp
 }
 
+func (o *XorOp) Execute(ctx Context) {
+	// TODO
+}
+
 func (o *XorOp) String() string {
 	return o.binaryOp.format("XOR")
 }
@@ -210,6 +258,10 @@ func (o *XorOp) String() string {
 // 0xc: IFE a, b - performs next instruction only if a==b
 type IfeOp struct {
 	binaryOp
+}
+
+func (o *IfeOp) Execute(ctx Context) {
+	// TODO
 }
 
 func (o *IfeOp) String() string {
@@ -221,6 +273,10 @@ type IfnOp struct {
 	binaryOp
 }
 
+func (o *IfnOp) Execute(ctx Context) {
+	// TODO
+}
+
 func (o *IfnOp) String() string {
 	return o.binaryOp.format("IFN")
 }
@@ -230,6 +286,10 @@ type IfgOp struct {
 	binaryOp
 }
 
+func (o *IfgOp) Execute(ctx Context) {
+	// TODO
+}
+
 func (o *IfgOp) String() string {
 	return o.binaryOp.format("IFG")
 }
@@ -237,6 +297,10 @@ func (o *IfgOp) String() string {
 // 0xf: IFB a, b - performs next instruction only if (a&b)!=0
 type IfbOp struct {
 	binaryOp
+}
+
+func (o *IfbOp) Execute(ctx Context) {
+	// TODO
 }
 
 func (o *IfbOp) String() string {

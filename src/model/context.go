@@ -21,6 +21,15 @@ type CPU interface {
 	WriteO(value Word)
 }
 
+func CPUEquals(a, b CPU) bool {
+	for id := RegA; id <= RegJ; id++ {
+		if a.Register(id) != b.Register(id) {
+			return false
+		}
+	}
+	return a.PC() == b.PC() && a.SP() == b.SP() && a.O() == b.O()
+}
+
 type Memory interface {
 	Read(address Word) Word
 	Write(address Word, value Word)

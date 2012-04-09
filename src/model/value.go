@@ -3,8 +3,8 @@ package model
 import "fmt"
 
 type Value interface {
-	//Write(Context, Word)
-	//Read(Context) Word
+	Write(Context, Word)
+	Read(Context) Word
 	LoadOpValue(WordLoader)
 	String() string
 }
@@ -63,6 +63,16 @@ type RegisterValue struct {
 	Reg RegisterId
 }
 
+func (v *RegisterValue) Write(ctx Context, word Word) {
+	ctx.WriteRegister(v.Reg, word)
+}
+
+func (v *RegisterValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
+}
+
 func (v *RegisterValue) String() string {
 	return v.Reg.String()
 }
@@ -71,6 +81,17 @@ func (v *RegisterValue) String() string {
 type RegisterAddressValue struct {
 	noExtraWord
 	Reg RegisterId
+}
+
+func (v *RegisterAddressValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v *RegisterAddressValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
 }
 
 func (v *RegisterAddressValue) String() string {
@@ -83,6 +104,17 @@ type RegisterRelAddressValue struct {
 	Reg RegisterId
 }
 
+func (v *RegisterRelAddressValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v *RegisterRelAddressValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
+}
+
 func (v *RegisterRelAddressValue) String() string {
 	return fmt.Sprintf("[0x%04x+%v]", v.Value, v.Reg)
 }
@@ -90,6 +122,17 @@ func (v *RegisterRelAddressValue) String() string {
 // 0x18: POP / [SP++]
 type PopValue struct {
 	noExtraWord
+}
+
+func (v PopValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v PopValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
 }
 
 func (v PopValue) String() string {
@@ -101,6 +144,17 @@ type PeekValue struct {
 	noExtraWord
 }
 
+func (v PeekValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v PeekValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
+}
+
 func (v PeekValue) String() string {
 	return "PEEK"
 }
@@ -108,6 +162,17 @@ func (v PeekValue) String() string {
 // 0x1a: PUSH / [--SP]
 type PushValue struct {
 	noExtraWord
+}
+
+func (v PushValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v PushValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
 }
 
 func (v PushValue) String() string {
@@ -119,6 +184,17 @@ type SpValue struct {
 	noExtraWord
 }
 
+func (v SpValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v SpValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
+}
+
 func (v SpValue) String() string {
 	return "SP"
 }
@@ -126,6 +202,17 @@ func (v SpValue) String() string {
 // 0x1c: PC
 type PcValue struct {
 	noExtraWord
+}
+
+func (v PcValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v PcValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
 }
 
 func (v PcValue) String() string {
@@ -137,6 +224,17 @@ type OValue struct {
 	noExtraWord
 }
 
+func (v OValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v OValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
+}
+
 func (v OValue) String() string {
 	return "O"
 }
@@ -144,6 +242,17 @@ func (v OValue) String() string {
 // 0x1e: [next word]
 type AddressValue struct {
 	extraWord
+}
+
+func (v *AddressValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v *AddressValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
 }
 
 func (v *AddressValue) String() string {
@@ -155,6 +264,15 @@ type WordValue struct {
 	extraWord
 }
 
+func (v *WordValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v *WordValue) Read(ctx Context) Word {
+	return v.extraWord.Value
+}
+
 func (v *WordValue) String() string {
 	return fmt.Sprintf("0x%04x", v.Value)
 }
@@ -163,6 +281,17 @@ func (v *WordValue) String() string {
 type LiteralValue struct {
 	noExtraWord
 	Literal Word
+}
+
+func (v *LiteralValue) Write(ctx Context, word Word) {
+	// TODO
+	panic("unimplemented")
+}
+
+func (v *LiteralValue) Read(ctx Context) Word {
+	// TODO
+	panic("unimplemented")
+	return 0
 }
 
 func (v *LiteralValue) String() string {

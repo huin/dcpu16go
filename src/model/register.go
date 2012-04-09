@@ -3,7 +3,7 @@ package model
 type RegisterId uint8
 
 const (
-	RegA = iota
+	RegA RegisterId = iota
 	RegB
 	RegC
 	RegX
