@@ -87,9 +87,7 @@ func (v *RegisterAddressValue) Write(ctx Context, word Word) {
 }
 
 func (v *RegisterAddressValue) Read(ctx Context) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return ctx.ReadMemory(ctx.Register(v.Reg))
 }
 
 func (v *RegisterAddressValue) String() string {
@@ -103,8 +101,7 @@ type RegisterRelAddressValue struct {
 }
 
 func (v *RegisterRelAddressValue) Write(ctx Context, word Word) {
-	// TODO
-	panic("unimplemented")
+	ctx.WriteMemory(ctx.Register(v.Reg)+v.Value, word)
 }
 
 func (v *RegisterRelAddressValue) Read(ctx Context) Word {

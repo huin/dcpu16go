@@ -91,6 +91,7 @@ type JsrOp struct {
 
 func (o *JsrOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *JsrOp) String() string {
@@ -132,6 +133,7 @@ type AddOp struct {
 
 func (o *AddOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *AddOp) String() string {
@@ -144,7 +146,9 @@ type SubOp struct {
 }
 
 func (o *SubOp) Execute(ctx Context) {
-	// TODO
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	o.A.Write(ctx, a-b)
+	// TODO overflow
 }
 
 func (o *SubOp) String() string {
@@ -158,6 +162,7 @@ type MulOp struct {
 
 func (o *MulOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *MulOp) String() string {
@@ -171,6 +176,7 @@ type DivOp struct {
 
 func (o *DivOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *DivOp) String() string {
@@ -184,6 +190,7 @@ type ModOp struct {
 
 func (o *ModOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *ModOp) String() string {
@@ -197,6 +204,7 @@ type ShlOp struct {
 
 func (o *ShlOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *ShlOp) String() string {
@@ -210,6 +218,7 @@ type ShrOp struct {
 
 func (o *ShrOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *ShrOp) String() string {
@@ -223,6 +232,7 @@ type AndOp struct {
 
 func (o *AndOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *AndOp) String() string {
@@ -236,6 +246,7 @@ type BorOp struct {
 
 func (o *BorOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *BorOp) String() string {
@@ -249,6 +260,7 @@ type XorOp struct {
 
 func (o *XorOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *XorOp) String() string {
@@ -262,6 +274,7 @@ type IfeOp struct {
 
 func (o *IfeOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *IfeOp) String() string {
@@ -274,7 +287,12 @@ type IfnOp struct {
 }
 
 func (o *IfnOp) Execute(ctx Context) {
-	// TODO
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	if a == b {
+		_, err := OperationLoad(ctx)
+		// TODO deal with err
+		_ = err
+	}
 }
 
 func (o *IfnOp) String() string {
@@ -288,6 +306,7 @@ type IfgOp struct {
 
 func (o *IfgOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *IfgOp) String() string {
@@ -301,6 +320,7 @@ type IfbOp struct {
 
 func (o *IfbOp) Execute(ctx Context) {
 	// TODO
+	panic("unimplemented")
 }
 
 func (o *IfbOp) String() string {
