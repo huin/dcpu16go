@@ -128,9 +128,7 @@ func (v PopValue) Write(ctx Context, word Word) {
 }
 
 func (v PopValue) Read(ctx Context) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return ctx.ReadMemory(ctx.ReadIncSP())
 }
 
 func (v PopValue) String() string {
@@ -148,9 +146,7 @@ func (v PeekValue) Write(ctx Context, word Word) {
 }
 
 func (v PeekValue) Read(ctx Context) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return ctx.ReadMemory(ctx.SP())
 }
 
 func (v PeekValue) String() string {
@@ -163,8 +159,7 @@ type PushValue struct {
 }
 
 func (v PushValue) Write(ctx Context, word Word) {
-	// TODO
-	panic("unimplemented")
+	ctx.WriteMemory(ctx.DecReadSP(), word)
 }
 
 func (v PushValue) Read(ctx Context) Word {
