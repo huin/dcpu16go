@@ -6,8 +6,18 @@ import (
 
 type Operation interface {
 	LoadNextWords(WordLoader)
-	Execute(Context) // TODO Return ticks.
+	Execute(Context) error // TODO Return ticks.
 	String() string
+}
+
+func OperationSkip(wordLoader WordLoader) error {
+	// TODO Efficient version that doesn't hit memory?
+	op, err := operationFromWord(wordLoader.WordLoad())
+	if err != nil {
+		return err
+	}
+	op.LoadNextWords(wordLoader)
+	return nil
 }
 
 func OperationLoad(wordLoader WordLoader) (Operation, error) {
@@ -89,7 +99,7 @@ type JsrOp struct {
 	unaryOp
 }
 
-func (o *JsrOp) Execute(ctx Context) {
+func (o *JsrOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -118,8 +128,9 @@ type SetOp struct {
 	binaryOp
 }
 
-func (o *SetOp) Execute(ctx Context) {
+func (o *SetOp) Execute(ctx Context) error {
 	o.A.Write(ctx, o.B.Read(ctx))
+	return nil
 }
 
 func (o *SetOp) String() string {
@@ -131,7 +142,7 @@ type AddOp struct {
 	binaryOp
 }
 
-func (o *AddOp) Execute(ctx Context) {
+func (o *AddOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -145,10 +156,11 @@ type SubOp struct {
 	binaryOp
 }
 
-func (o *SubOp) Execute(ctx Context) {
+func (o *SubOp) Execute(ctx Context) error {
 	a, b := o.A.Read(ctx), o.B.Read(ctx)
 	o.A.Write(ctx, a-b)
 	// TODO overflow
+	return nil
 }
 
 func (o *SubOp) String() string {
@@ -160,7 +172,7 @@ type MulOp struct {
 	binaryOp
 }
 
-func (o *MulOp) Execute(ctx Context) {
+func (o *MulOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -174,7 +186,7 @@ type DivOp struct {
 	binaryOp
 }
 
-func (o *DivOp) Execute(ctx Context) {
+func (o *DivOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -188,7 +200,7 @@ type ModOp struct {
 	binaryOp
 }
 
-func (o *ModOp) Execute(ctx Context) {
+func (o *ModOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -202,7 +214,7 @@ type ShlOp struct {
 	binaryOp
 }
 
-func (o *ShlOp) Execute(ctx Context) {
+func (o *ShlOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -216,7 +228,7 @@ type ShrOp struct {
 	binaryOp
 }
 
-func (o *ShrOp) Execute(ctx Context) {
+func (o *ShrOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -230,7 +242,7 @@ type AndOp struct {
 	binaryOp
 }
 
-func (o *AndOp) Execute(ctx Context) {
+func (o *AndOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -244,7 +256,7 @@ type BorOp struct {
 	binaryOp
 }
 
-func (o *BorOp) Execute(ctx Context) {
+func (o *BorOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -258,7 +270,7 @@ type XorOp struct {
 	binaryOp
 }
 
-func (o *XorOp) Execute(ctx Context) {
+func (o *XorOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -272,9 +284,12 @@ type IfeOp struct {
 	binaryOp
 }
 
-func (o *IfeOp) Execute(ctx Context) {
-	// TODO
-	panic("unimplemented")
+func (o *IfeOp) Execute(ctx Context) error {
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	if a != b {
+		return OperationSkip(ctx)
+	}
+	return nil
 }
 
 func (o *IfeOp) String() string {
@@ -286,13 +301,12 @@ type IfnOp struct {
 	binaryOp
 }
 
-func (o *IfnOp) Execute(ctx Context) {
+func (o *IfnOp) Execute(ctx Context) error {
 	a, b := o.A.Read(ctx), o.B.Read(ctx)
 	if a == b {
-		_, err := OperationLoad(ctx)
-		// TODO deal with err
-		_ = err
+		return OperationSkip(ctx)
 	}
+	return nil
 }
 
 func (o *IfnOp) String() string {
@@ -304,7 +318,7 @@ type IfgOp struct {
 	binaryOp
 }
 
-func (o *IfgOp) Execute(ctx Context) {
+func (o *IfgOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -318,7 +332,7 @@ type IfbOp struct {
 	binaryOp
 }
 
-func (o *IfbOp) Execute(ctx Context) {
+func (o *IfbOp) Execute(ctx Context) error {
 	// TODO
 	panic("unimplemented")
 }

@@ -5,6 +5,5 @@ func Step(ctx Context) error {
 	if err != nil {
 		return err
 	}
-	op.Execute(ctx)
-	return nil
+	return op.Execute(ctx)
 }
