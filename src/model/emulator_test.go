@@ -202,7 +202,34 @@ func TestStep(t *testing.T) {
 						{0x2000, []Word{0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}},
 					},
 				},
-				// TODO Additional state tests.
+				&ExpState{
+					Name:     "before JSR",
+					NumSteps: 1,
+					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0x0004}, pc: 0x0014, sp: 0xffff, o: 0x0000},
+				},
+				&ExpState{
+					Name:     "in testsub",
+					NumSteps: 1,
+					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0x0004}, pc: 0x0018, sp: 0xfffe, o: 0x0000},
+					Mems: []ExpMem{
+						{0xfffe, []Word{0x0016, 0x0000}},
+					},
+				},
+				&ExpState{
+					Name:     "returned from testsub",
+					NumSteps: 2,
+					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x0016, sp: 0xffff, o: 0x0000},
+				},
+				&ExpState{
+					Name:     "entering crash loop",
+					NumSteps: 1,
+					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x001a, sp: 0xffff, o: 0x0000},
+				},
+				&ExpState{
+					Name:     "still in crash loop",
+					NumSteps: 10,
+					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x001a, sp: 0xffff, o: 0x0000},
+				},
 			},
 		},
 	}

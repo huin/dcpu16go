@@ -100,8 +100,9 @@ type JsrOp struct {
 }
 
 func (o *JsrOp) Execute(ctx Context) error {
-	// TODO
-	panic("unimplemented")
+	ctx.WriteMemory(ctx.DecReadSP(), ctx.PC())
+	ctx.WritePC(o.A.Read(ctx))
+	return nil
 }
 
 func (o *JsrOp) String() string {
@@ -215,8 +216,10 @@ type ShlOp struct {
 }
 
 func (o *ShlOp) Execute(ctx Context) error {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	o.A.Write(ctx, a<<b)
+	// TODO overflow
+	return nil
 }
 
 func (o *ShlOp) String() string {
