@@ -21,6 +21,30 @@ func (exp *ExpMem) CheckMem(t *testing.T, testName string, mem *MemoryState) boo
 	return true
 }
 
+type StateChecker interface {
+	StateCheck(t *testing.T, testName string, ctx *StandardContext) bool
+}
+
+type ErrState struct {
+	Name     string
+	NumSteps int
+}
+
+func (exp *ErrState) StateCheck(t *testing.T, testName string, ctx *StandardContext) bool {
+	testName = testName + "::" + exp.Name
+	for i := 0; i < (exp.NumSteps - 1); i++ {
+		err := Step(ctx)
+		if err != nil {
+			t.Fatalf("%s: unexpected emulation error: %v", testName, err)
+		}
+	}
+	err := Step(ctx)
+	if err == nil {
+		t.Fatalf("%s: no expected emulation error", testName)
+	}
+	return true
+}
+
 type ExpState struct {
 	Name     string
 	NumSteps int
@@ -28,11 +52,14 @@ type ExpState struct {
 	Mems     []ExpMem
 }
 
-func (exp *ExpState) CheckState(t *testing.T, testName string, ctx *StandardContext) bool {
+func (exp *ExpState) StateCheck(t *testing.T, testName string, ctx *StandardContext) bool {
 	testName = testName + "::" + exp.Name
 
 	for i := 0; i < exp.NumSteps; i++ {
-		Step(ctx)
+		err := Step(ctx)
+		if err != nil {
+			t.Fatalf("%s: unexpected emulation error: %v", testName, err)
+		}
 	}
 
 	if !CPUEquals(&exp.CPU, &ctx.CPUState) {
@@ -51,47 +78,19 @@ func (exp *ExpState) CheckState(t *testing.T, testName string, ctx *StandardCont
 	return true
 }
 
-var notchExample = []Word{
-	// Try some basic stuff
-	0x7c01, 0x0030, // SET A, 0x30
-	0x7de1, 0x1000, 0x0020, // SET [0x1000], 0x20
-	0x7803, 0x1000, // SUB A, [0x1000]
-	0xc00d,         // IFN A, 0x10
-	0x7dc1, 0x001a, // SET PC, crash
-
-	// Do a loopy thing
-	0xa861,         // SET I, 10
-	0x7c01, 0x2000, // SET A, 0x2000
-	0x2161, 0x2000, // :loop         SET [0x2000+I], [A]
-	0x8463,         // SUB I, 1
-	0x806d,         // IFN I, 0
-	0x7dc1, 0x000d, // SET PC, loop
-
-	// Call a subroutine
-	0x9031,         // SET X, 0x4
-	0x7c10, 0x0018, // JSR testsub
-	0x7dc1, 0x001a, // SET PC, crash
-
-	0x9037, // :testsub      SHL X, 4
-	0x61c1, // SET PC, POP
-
-	// Hang forever. X should now be 0x40 if everything went right.
-	0x7dc1, 0x001a, // :crash        SET PC, crash
-}
-
 func TestStep(t *testing.T) {
 	type Test struct {
 		Name      string
 		InitMem   []Word
-		ExpStates []ExpState
+		ExpStates []StateChecker
 	}
 
 	tests := []Test{
 		{
 			Name:    "SET A, 0x0030",
 			InitMem: []Word{0x7c01, 0x0030},
-			ExpStates: []ExpState{
-				ExpState{
+			ExpStates: []StateChecker{
+				&ExpState{
 					NumSteps: 1,
 					CPU:      CPUState{registers: [8]Word{0x0030, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0002, sp: 0xffff},
 					Mems:     []ExpMem{{0x0001, []Word{0x0030}}},
@@ -101,8 +100,8 @@ func TestStep(t *testing.T) {
 		{
 			Name:    "SET [0x0003], 0xbeef",
 			InitMem: []Word{0x7de1, 0x0003, 0xbeef, 0x0000},
-			ExpStates: []ExpState{
-				ExpState{
+			ExpStates: []StateChecker{
+				&ExpState{
 					NumSteps: 1,
 					CPU:      CPUState{registers: [8]Word{0, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0003, sp: 0xffff},
 					Mems:     []ExpMem{{0x0003, []Word{0xbeef}}},
@@ -117,8 +116,8 @@ func TestStep(t *testing.T) {
 				0x6421, // SET C, PEEK
 				0x6011, // SET B, POP
 			},
-			ExpStates: []ExpState{
-				ExpState{
+			ExpStates: []StateChecker{
+				&ExpState{
 					NumSteps: 4,
 					CPU:      CPUState{registers: [8]Word{0x0030, 0x0030, 0x0030, 0, 0, 0, 0, 0}, pc: 0x0005, sp: 0xffff},
 					Mems:     []ExpMem{{0xfffe, []Word{0x0030, 0x0000}}},
@@ -126,10 +125,55 @@ func TestStep(t *testing.T) {
 			},
 		},
 		{
-			Name:    "Notch example",
-			InitMem: notchExample,
-			ExpStates: []ExpState{
-				ExpState{
+			Name:    "unknown operation",
+			InitMem: []Word{0xfff0},
+			ExpStates: []StateChecker{
+				&ErrState{NumSteps: 1},
+			},
+		},
+		{
+			Name:    "IFE 0, 1 / unknown operation",
+			InitMem: []Word{0x860c, 0xfff0},
+			ExpStates: []StateChecker{
+				&ErrState{NumSteps: 1},
+				&ExpState{
+					Name:     "state check",
+					NumSteps: 0,
+					CPU:      CPUState{pc: 0x0002, sp: 0xffff},
+				},
+			},
+		},
+		{
+			Name: "Notch example",
+			InitMem: []Word{
+				// Try some basic stuff
+				0x7c01, 0x0030, // SET A, 0x30
+				0x7de1, 0x1000, 0x0020, // SET [0x1000], 0x20
+				0x7803, 0x1000, // SUB A, [0x1000]
+				0xc00d,         // IFN A, 0x10
+				0x7dc1, 0x001a, // SET PC, crash
+
+				// Do a loopy thing
+				0xa861,         // SET I, 10
+				0x7c01, 0x2000, // SET A, 0x2000
+				0x2161, 0x2000, // :loop         SET [0x2000+I], [A]
+				0x8463,         // SUB I, 1
+				0x806d,         // IFN I, 0
+				0x7dc1, 0x000d, // SET PC, loop
+
+				// Call a subroutine
+				0x9031,         // SET X, 0x4
+				0x7c10, 0x0018, // JSR testsub
+				0x7dc1, 0x001a, // SET PC, crash
+
+				0x9037, // :testsub      SHL X, 4
+				0x61c1, // SET PC, POP
+
+				// Hang forever. X should now be 0x40 if everything went right.
+				0x7dc1, 0x001a, // :crash        SET PC, crash
+			},
+			ExpStates: []StateChecker{
+				&ExpState{
 					Name:     "after basic stuff",
 					NumSteps: 4,
 					CPU:      CPUState{registers: [8]Word{0x0010}, pc: 0x000a, sp: 0xffff, o: 0x0000},
@@ -137,12 +181,12 @@ func TestStep(t *testing.T) {
 						{0x1000, []Word{0x0020}},
 					},
 				},
-				ExpState{
+				&ExpState{
 					Name:     "after loop init",
 					NumSteps: 2,
 					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0, 0, 0, 10, 0}, pc: 0x000d, sp: 0xffff, o: 0x0000},
 				},
-				ExpState{
+				&ExpState{
 					Name:     "after first test+iteration",
 					NumSteps: 4,
 					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0, 0, 0, 9, 0}, pc: 0x000d, sp: 0xffff, o: 0x0000},
@@ -150,7 +194,7 @@ func TestStep(t *testing.T) {
 						{0x2010, []Word{0x0000}},
 					},
 				},
-				ExpState{
+				&ExpState{
 					Name:     "after loop completion",
 					NumSteps: 4*8 + 3,
 					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0013, sp: 0xffff, o: 0x0000},
@@ -158,7 +202,34 @@ func TestStep(t *testing.T) {
 						{0x2000, []Word{0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}},
 					},
 				},
-				// TODO Additional state tests.
+				&ExpState{
+					Name:     "before JSR",
+					NumSteps: 1,
+					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0x0004}, pc: 0x0014, sp: 0xffff, o: 0x0000},
+				},
+				&ExpState{
+					Name:     "in testsub",
+					NumSteps: 1,
+					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0x0004}, pc: 0x0018, sp: 0xfffe, o: 0x0000},
+					Mems: []ExpMem{
+						{0xfffe, []Word{0x0016, 0x0000}},
+					},
+				},
+				&ExpState{
+					Name:     "returned from testsub",
+					NumSteps: 2,
+					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x0016, sp: 0xffff, o: 0x0000},
+				},
+				&ExpState{
+					Name:     "entering crash loop",
+					NumSteps: 1,
+					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x001a, sp: 0xffff, o: 0x0000},
+				},
+				&ExpState{
+					Name:     "still in crash loop",
+					NumSteps: 10,
+					CPU:      CPUState{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x001a, sp: 0xffff, o: 0x0000},
+				},
 			},
 		},
 	}
@@ -170,9 +241,8 @@ func TestStep(t *testing.T) {
 		ctx.CPUState.Init()
 		copy(ctx.MemoryState.Data[0:], test.InitMem)
 
-		for expStateIdx := range test.ExpStates {
-			expState := &test.ExpStates[expStateIdx]
-			expState.CheckState(t, test.Name, &ctx)
+		for _, expState := range test.ExpStates {
+			expState.StateCheck(t, test.Name, &ctx)
 		}
 	}
 }
