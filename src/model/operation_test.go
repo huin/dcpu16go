@@ -24,7 +24,7 @@ func (l *FakeWordLoader) exhausted() bool {
 }
 
 func TestOperationLoad(t *testing.T) {
-	type T struct {
+	type Test struct {
 		Expected string
 		Words    []Word
 	}
@@ -32,7 +32,7 @@ func TestOperationLoad(t *testing.T) {
 	// Test examples taken from dcpu-16.txt, and modified such that literal lengths
 	// indicate "next word" (4 hex digits) vs "embedded literal" (2 hex digits),
 	// and replacing labels with address values.
-	tests := []T{
+	tests := []Test{
 		// Try some basic stuff
 		{"SET A, 0x0030", []Word{0x7c01, 0x0030}},
 		{"SET [0x1000], 0x0020", []Word{0x7de1, 0x1000, 0x0020}},
@@ -71,6 +71,66 @@ func TestOperationLoad(t *testing.T) {
 		if test.Expected != str {
 			t.Errorf("Operation %v (%#v) disagrees on string repr (expected %q, got %q)",
 				op, test.Words, test.Expected, str)
+		}
+	}
+}
+
+// Returns a binaryOp with value A as register A, and value B as the given
+// literal value.
+func binOpValue(bValue Word) binaryOp {
+	a := &RegisterValue{Reg: RegA}
+	b := &WordValue{}
+	b.Value = bValue
+	return binaryOp{a, b}
+}
+
+func TestOperationExecute(t *testing.T) {
+	type Test struct {
+		Name  string
+		Op    Operation
+		InitA Word
+		ExpA  Word
+		ExpO  Word
+	}
+
+	tests := []Test{
+		// AddOp
+		{
+			"ADD 0 + 5 = 5",
+			&AddOp{binOpValue(5)},
+			0,
+			5, 0,
+		},
+		{
+			"ADD 0xffff + 0x0001 = 0x0000, carry=0x0001",
+			&AddOp{binOpValue(0x0001)},
+			0xffff,
+			0x0000, 0x0001,
+		},
+		// SubOp
+		{
+			"SUB 10 - 2 = 8",
+			&SubOp{binOpValue(2)},
+			10,
+			8, 0,
+		},
+		{
+			"SUB 0x000d - 0x000f = 0xfffe, with carry=0xffff",
+			&SubOp{binOpValue(0x000f)},
+			0x000d,
+			0xfffe, 0xffff,
+		},
+	}
+
+	for _, test := range tests {
+		var ctx StandardContext
+		ctx.Init()
+		ctx.CPUState.WriteRegister(RegA, test.InitA)
+		test.Op.Execute(&ctx)
+		if test.ExpA != ctx.CPUState.registers[RegA] || test.ExpO != ctx.CPUState.o {
+			t.Errorf("%s: %v", test.Name, test.Op.String())
+			t.Errorf("  expected: A=0x%04x O=0x%04x", test.ExpA, test.ExpO)
+			t.Errorf("       got: A=0x%04x O=0x%04x", ctx.CPUState.registers[RegA], ctx.CPUState.o)
 		}
 	}
 }

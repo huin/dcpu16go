@@ -132,8 +132,10 @@ type AddOp struct {
 }
 
 func (o *AddOp) Execute(ctx Context) {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	wideA := uint32(a) + uint32(b)
+	o.A.Write(ctx, Word(wideA&0xffff))
+	ctx.WriteO(Word(wideA >> 16))
 }
 
 func (o *AddOp) String() string {
@@ -147,8 +149,9 @@ type SubOp struct {
 
 func (o *SubOp) Execute(ctx Context) {
 	a, b := o.A.Read(ctx), o.B.Read(ctx)
-	o.A.Write(ctx, a-b)
-	// TODO overflow
+	wideA := uint32(a) - uint32(b)
+	o.A.Write(ctx, Word(wideA&0xffff))
+	ctx.WriteO(Word(wideA >> 16))
 }
 
 func (o *SubOp) String() string {
