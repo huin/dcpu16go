@@ -28,7 +28,7 @@ func operationFromWord(w Word) (Operation, error) {
 		switch extOpCode {
 		case 0x00: // reserved for future expansion
 		case 0x01: // JSR a - pushes the address of the next instruction to the stack, then sets PC to a
-			return &JsrOp{uniaryOp{a}}, nil
+			return &JsrOp{unaryOp{a}}, nil
 		default: // 0x02-0x3f: reserved
 		}
 		return nil, fmt.Errorf("unknown/reserved extOpCode 0x%02x", extOpCode)
@@ -71,22 +71,22 @@ func operationFromWord(w Word) (Operation, error) {
 	panic(fmt.Errorf("Operation code 0x%x out of range", opCode))
 }
 
-// uniaryOp forms common data and code for operations that take one value.
-type uniaryOp struct {
+// unaryOp forms common data and code for operations that take one value.
+type unaryOp struct {
 	A Value
 }
 
-func (o *uniaryOp) LoadNextWords(wordLoader WordLoader) {
+func (o *unaryOp) LoadNextWords(wordLoader WordLoader) {
 	o.A.LoadOpValue(wordLoader)
 }
 
-func (o *uniaryOp) format(name string) string {
+func (o *unaryOp) format(name string) string {
 	return fmt.Sprintf("%s %v", name, o.A)
 }
 
 // 0x01: JSR a - pushes the address of the next instruction to the stack, then sets PC to a
 type JsrOp struct {
-	uniaryOp
+	unaryOp
 }
 
 func (o *JsrOp) Execute(ctx Context) {
@@ -95,7 +95,7 @@ func (o *JsrOp) Execute(ctx Context) {
 }
 
 func (o *JsrOp) String() string {
-	return o.uniaryOp.format("JSR")
+	return o.unaryOp.format("JSR")
 }
 
 // binaryOp forms common data and code for operations that take two values (A
