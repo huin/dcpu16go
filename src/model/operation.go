@@ -145,9 +145,9 @@ type AddOp struct {
 
 func (o *AddOp) Execute(ctx Context) error {
 	a, b := o.A.Read(ctx), o.B.Read(ctx)
-	wideA := uint32(a) + uint32(b)
-	o.A.Write(ctx, Word(wideA&0xffff))
-	ctx.WriteO(Word(wideA >> 16))
+	result := uint32(a) + uint32(b)
+	o.A.Write(ctx, Word(result&0xffff))
+	ctx.WriteO(Word(result >> 16))
 	return nil
 }
 
@@ -162,9 +162,9 @@ type SubOp struct {
 
 func (o *SubOp) Execute(ctx Context) error {
 	a, b := o.A.Read(ctx), o.B.Read(ctx)
-	wideA := uint32(a) - uint32(b)
-	o.A.Write(ctx, Word(wideA&0xffff))
-	ctx.WriteO(Word(wideA >> 16))
+	result := uint32(a) - uint32(b)
+	o.A.Write(ctx, Word(result&0xffff))
+	ctx.WriteO(Word(result >> 16))
 	return nil
 }
 
@@ -179,9 +179,9 @@ type MulOp struct {
 
 func (o *MulOp) Execute(ctx Context) error {
 	a, b := o.A.Read(ctx), o.B.Read(ctx)
-	wideA := uint32(a) * uint32(b)
-	o.A.Write(ctx, Word(wideA&0xffff))
-	ctx.WriteO(Word(wideA >> 16))
+	result := uint32(a) * uint32(b)
+	o.A.Write(ctx, Word(result&0xffff))
+	ctx.WriteO(Word(result >> 16))
 	return nil
 }
 
@@ -196,7 +196,7 @@ type DivOp struct {
 
 func (o *DivOp) Execute(ctx Context) error {
 	a, b := o.A.Read(ctx), o.B.Read(ctx)
-	result := (uint32(a)<<16) / uint32(b)
+	result := (uint32(a) << 16) / uint32(b)
 	o.A.Write(ctx, Word(result>>16))
 	ctx.WriteO(Word(result & 0xffff))
 	return nil
@@ -227,8 +227,9 @@ type ShlOp struct {
 
 func (o *ShlOp) Execute(ctx Context) error {
 	a, b := o.A.Read(ctx), o.B.Read(ctx)
-	o.A.Write(ctx, a<<b)
-	// TODO overflow
+	result := uint32(a) << uint32(b)
+	o.A.Write(ctx, Word(result))
+	ctx.WriteO(Word(result >> 16))
 	return nil
 }
 
@@ -242,8 +243,11 @@ type ShrOp struct {
 }
 
 func (o *ShrOp) Execute(ctx Context) error {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	result := (uint32(a) << 16) >> uint32(b)
+	o.A.Write(ctx, Word(result>>16))
+	ctx.WriteO(Word(result & 0xffff))
+	return nil
 }
 
 func (o *ShrOp) String() string {

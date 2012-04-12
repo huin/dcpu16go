@@ -138,6 +138,29 @@ func TestOperationExecute(t *testing.T) {
 			0x1234, &DivOp{binOpValue(0x0100)},
 			0x0012, 0x3400,
 		},
+		// TODO ModOp
+		// ShlOp
+		{
+			"SHL 0x0123 << 4 = 0x1230",
+			0x0123, &ShlOp{binOpValue(4)},
+			0x1230, 0x0000,
+		},
+		{
+			"SHL 0x0123 << 12 = 0x3000, with carry=0x0012",
+			0x0123, &ShlOp{binOpValue(12)},
+			0x3000, 0x0012,
+		},
+		// ShrOp
+		{
+			"SHR 0x1230 >> 4 = 0x0123",
+			0x1230, &ShrOp{binOpValue(4)},
+			0x0123, 0x0000,
+		},
+		{
+			"SHR 0x1230 >> 8 = 0x0001, with carry=0x2300",
+			0x0123, &ShrOp{binOpValue(8)},
+			0x0001, 0x2300,
+		},
 	}
 
 	for _, test := range tests {
