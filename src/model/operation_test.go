@@ -87,8 +87,8 @@ func binOpValue(bValue Word) binaryOp {
 func TestOperationExecute(t *testing.T) {
 	type Test struct {
 		Name  string
-		Op    Operation
 		InitA Word
+		Op    Operation
 		ExpA  Word
 		ExpO  Word
 	}
@@ -97,27 +97,23 @@ func TestOperationExecute(t *testing.T) {
 		// AddOp
 		{
 			"ADD 0 + 5 = 5",
-			&AddOp{binOpValue(5)},
-			0,
+			0, &AddOp{binOpValue(5)},
 			5, 0,
 		},
 		{
 			"ADD 0xffff + 0x0001 = 0x0000, carry=0x0001",
-			&AddOp{binOpValue(0x0001)},
-			0xffff,
+			0xffff, &AddOp{binOpValue(0x0001)},
 			0x0000, 0x0001,
 		},
 		// SubOp
 		{
 			"SUB 10 - 2 = 8",
-			&SubOp{binOpValue(2)},
-			10,
+			10, &SubOp{binOpValue(2)},
 			8, 0,
 		},
 		{
 			"SUB 0x000d - 0x000f = 0xfffe, with carry=0xffff",
-			&SubOp{binOpValue(0x000f)},
-			0x000d,
+			0x000d, &SubOp{binOpValue(0x000f)},
 			0xfffe, 0xffff,
 		},
 	}
