@@ -2,14 +2,14 @@ package model
 
 const MemorySize = 0x10000
 
-type MemoryState struct {
+type BasicMemoryState struct {
 	Data [MemorySize]Word
 }
 
-func (mem *MemoryState) ReadMemory(address Word) Word {
+func (mem *BasicMemoryState) ReadMemory(address Word) Word {
 	return mem.Data[address]
 }
 
-func (mem *MemoryState) WriteMemory(address Word, value Word) {
+func (mem *BasicMemoryState) WriteMemory(address Word, value Word) {
 	mem.Data[address] = value
 }

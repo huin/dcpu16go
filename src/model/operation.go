@@ -6,7 +6,7 @@ import (
 
 type Operation interface {
 	LoadNextWords(WordLoader)
-	Execute(Context) error // TODO Return ticks.
+	Execute(MachineState) error // TODO Return ticks.
 	String() string
 }
 
@@ -99,9 +99,9 @@ type JsrOp struct {
 	unaryOp
 }
 
-func (o *JsrOp) Execute(ctx Context) error {
-	ctx.WriteMemory(ctx.DecReadSP(), ctx.PC())
-	ctx.WritePC(o.A.Read(ctx))
+func (o *JsrOp) Execute(state MachineState) error {
+	state.WriteMemory(state.DecReadSP(), state.PC())
+	state.WritePC(o.A.Read(state))
 	return nil
 }
 
@@ -129,8 +129,8 @@ type SetOp struct {
 	binaryOp
 }
 
-func (o *SetOp) Execute(ctx Context) error {
-	o.A.Write(ctx, o.B.Read(ctx))
+func (o *SetOp) Execute(state MachineState) error {
+	o.A.Write(state, o.B.Read(state))
 	return nil
 }
 
@@ -143,11 +143,11 @@ type AddOp struct {
 	binaryOp
 }
 
-func (o *AddOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
+func (o *AddOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
 	result := uint32(a) + uint32(b)
-	o.A.Write(ctx, Word(result&0xffff))
-	ctx.WriteO(Word(result >> 16))
+	o.A.Write(state, Word(result&0xffff))
+	state.WriteO(Word(result >> 16))
 	return nil
 }
 
@@ -160,11 +160,11 @@ type SubOp struct {
 	binaryOp
 }
 
-func (o *SubOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
+func (o *SubOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
 	result := uint32(a) - uint32(b)
-	o.A.Write(ctx, Word(result&0xffff))
-	ctx.WriteO(Word(result >> 16))
+	o.A.Write(state, Word(result&0xffff))
+	state.WriteO(Word(result >> 16))
 	return nil
 }
 
@@ -177,11 +177,11 @@ type MulOp struct {
 	binaryOp
 }
 
-func (o *MulOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
+func (o *MulOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
 	result := uint32(a) * uint32(b)
-	o.A.Write(ctx, Word(result&0xffff))
-	ctx.WriteO(Word(result >> 16))
+	o.A.Write(state, Word(result&0xffff))
+	state.WriteO(Word(result >> 16))
 	return nil
 }
 
@@ -194,11 +194,11 @@ type DivOp struct {
 	binaryOp
 }
 
-func (o *DivOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
+func (o *DivOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
 	result := (uint32(a) << 16) / uint32(b)
-	o.A.Write(ctx, Word(result>>16))
-	ctx.WriteO(Word(result & 0xffff))
+	o.A.Write(state, Word(result>>16))
+	state.WriteO(Word(result & 0xffff))
 	return nil
 }
 
@@ -211,9 +211,9 @@ type ModOp struct {
 	binaryOp
 }
 
-func (o *ModOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
-	o.A.Write(ctx, a%b)
+func (o *ModOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	o.A.Write(state, a%b)
 	return nil
 }
 
@@ -226,11 +226,11 @@ type ShlOp struct {
 	binaryOp
 }
 
-func (o *ShlOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
+func (o *ShlOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
 	result := uint32(a) << uint32(b)
-	o.A.Write(ctx, Word(result))
-	ctx.WriteO(Word(result >> 16))
+	o.A.Write(state, Word(result))
+	state.WriteO(Word(result >> 16))
 	return nil
 }
 
@@ -243,11 +243,11 @@ type ShrOp struct {
 	binaryOp
 }
 
-func (o *ShrOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
+func (o *ShrOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
 	result := (uint32(a) << 16) >> uint32(b)
-	o.A.Write(ctx, Word(result>>16))
-	ctx.WriteO(Word(result & 0xffff))
+	o.A.Write(state, Word(result>>16))
+	state.WriteO(Word(result & 0xffff))
 	return nil
 }
 
@@ -260,9 +260,9 @@ type AndOp struct {
 	binaryOp
 }
 
-func (o *AndOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
-	o.A.Write(ctx, a&b)
+func (o *AndOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	o.A.Write(state, a&b)
 	return nil
 }
 
@@ -275,9 +275,9 @@ type BorOp struct {
 	binaryOp
 }
 
-func (o *BorOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
-	o.A.Write(ctx, a|b)
+func (o *BorOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	o.A.Write(state, a|b)
 	return nil
 }
 
@@ -290,7 +290,7 @@ type XorOp struct {
 	binaryOp
 }
 
-func (o *XorOp) Execute(ctx Context) error {
+func (o *XorOp) Execute(state MachineState) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -304,10 +304,10 @@ type IfeOp struct {
 	binaryOp
 }
 
-func (o *IfeOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
+func (o *IfeOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
 	if a != b {
-		return OperationSkip(ctx)
+		return OperationSkip(state)
 	}
 	return nil
 }
@@ -321,10 +321,10 @@ type IfnOp struct {
 	binaryOp
 }
 
-func (o *IfnOp) Execute(ctx Context) error {
-	a, b := o.A.Read(ctx), o.B.Read(ctx)
+func (o *IfnOp) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
 	if a == b {
-		return OperationSkip(ctx)
+		return OperationSkip(state)
 	}
 	return nil
 }
@@ -338,7 +338,7 @@ type IfgOp struct {
 	binaryOp
 }
 
-func (o *IfgOp) Execute(ctx Context) error {
+func (o *IfgOp) Execute(state MachineState) error {
 	// TODO
 	panic("unimplemented")
 }
@@ -352,7 +352,7 @@ type IfbOp struct {
 	binaryOp
 }
 
-func (o *IfbOp) Execute(ctx Context) error {
+func (o *IfbOp) Execute(state MachineState) error {
 	// TODO
 	panic("unimplemented")
 }

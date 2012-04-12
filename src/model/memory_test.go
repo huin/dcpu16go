@@ -1,3 +1,3 @@
 package model
 
-var memoryStateImplTest Memory = &MemoryState{}
+var memoryStateImplTest Memory = &BasicMemoryState{}

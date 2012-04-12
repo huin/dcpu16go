@@ -1,13 +1,13 @@
 package model
 
-type CPUState struct {
+type BasicCPU struct {
 	registers [8]Word // registers A-J, index with RegisterId.
 	pc        Word    // Program counter.
 	sp        Word    // Stack pointer.
 	o         Word    // Overflow.
 }
 
-func (cpu *CPUState) Init() {
+func (cpu *BasicCPU) Init() {
 	for i := range cpu.registers {
 		cpu.registers[i] = 0x0000
 	}
@@ -17,54 +17,54 @@ func (cpu *CPUState) Init() {
 	cpu.o = 0x0000
 }
 
-func (cpu *CPUState) Register(id RegisterId) Word {
+func (cpu *BasicCPU) Register(id RegisterId) Word {
 	return cpu.registers[id]
 }
 
-func (cpu *CPUState) WriteRegister(id RegisterId, value Word) {
+func (cpu *BasicCPU) WriteRegister(id RegisterId, value Word) {
 	cpu.registers[id] = value
 }
 
-func (cpu *CPUState) PC() Word {
+func (cpu *BasicCPU) PC() Word {
 	return cpu.pc
 }
 
-func (cpu *CPUState) WritePC(value Word) {
+func (cpu *BasicCPU) WritePC(value Word) {
 	cpu.pc = value
 }
 
 // Reads PC, and increments it (PC++).
-func (cpu *CPUState) ReadIncPC() Word {
+func (cpu *BasicCPU) ReadIncPC() Word {
 	value := cpu.pc
 	cpu.pc++
 	return value
 }
 
-func (cpu *CPUState) SP() Word {
+func (cpu *BasicCPU) SP() Word {
 	return cpu.sp
 }
 
-func (cpu *CPUState) WriteSP(value Word) {
+func (cpu *BasicCPU) WriteSP(value Word) {
 	cpu.sp = value
 }
 
 // Reads SP, and increments it (SP++).
-func (cpu *CPUState) ReadIncSP() Word {
+func (cpu *BasicCPU) ReadIncSP() Word {
 	value := cpu.sp
 	cpu.sp++
 	return value
 }
 
 // Decrements SP and reads it (--SP).
-func (cpu *CPUState) DecReadSP() Word {
+func (cpu *BasicCPU) DecReadSP() Word {
 	cpu.sp--
 	return cpu.sp
 }
 
-func (cpu *CPUState) O() Word {
+func (cpu *BasicCPU) O() Word {
 	return cpu.o
 }
 
-func (cpu *CPUState) WriteO(value Word) {
+func (cpu *BasicCPU) WriteO(value Word) {
 	cpu.o = value
 }

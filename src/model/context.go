@@ -35,21 +35,21 @@ type Memory interface {
 	WriteMemory(address Word, value Word)
 }
 
-type Context interface {
+type MachineState interface {
 	WordLoader
 	CPU
 	Memory
 }
 
-type StandardContext struct {
-	CPUState
-	MemoryState
+type BasicMachineState struct {
+	BasicCPU
+	BasicMemoryState
 }
 
-func (ctx *StandardContext) Init() {
-	ctx.CPUState.Init()
+func (state *BasicMachineState) Init() {
+	state.BasicCPU.Init()
 }
 
-func (ctx *StandardContext) WordLoad() Word {
-	return ctx.MemoryState.ReadMemory(ctx.ReadIncPC())
+func (state *BasicMachineState) WordLoad() Word {
+	return state.BasicMemoryState.ReadMemory(state.ReadIncPC())
 }

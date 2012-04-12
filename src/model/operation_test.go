@@ -186,14 +186,14 @@ func TestOperationExecute(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		var ctx StandardContext
-		ctx.Init()
-		ctx.CPUState.WriteRegister(RegA, test.InitA)
-		test.Op.Execute(&ctx)
-		if test.ExpA != ctx.CPUState.registers[RegA] || test.ExpO != ctx.CPUState.o {
+		var state BasicMachineState
+		state.Init()
+		state.BasicCPU.WriteRegister(RegA, test.InitA)
+		test.Op.Execute(&state)
+		if test.ExpA != state.BasicCPU.registers[RegA] || test.ExpO != state.BasicCPU.o {
 			t.Errorf("%s: %v", test.Name, test.Op.String())
 			t.Errorf("  expected: A=0x%04x O=0x%04x", test.ExpA, test.ExpO)
-			t.Errorf("       got: A=0x%04x O=0x%04x", ctx.CPUState.registers[RegA], ctx.CPUState.o)
+			t.Errorf("       got: A=0x%04x O=0x%04x", state.BasicCPU.registers[RegA], state.BasicCPU.o)
 		}
 	}
 }

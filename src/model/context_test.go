@@ -1,3 +1,3 @@
 package model
 
-var standardContextImplTest Context = &StandardContext{}
+var basicMachineStateImplTest MachineState = &BasicMachineState{}

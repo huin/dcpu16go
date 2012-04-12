@@ -1,3 +1,3 @@
 package model
 
-var cpuStateImplTest CPU = &CPUState{}
+var cpuStateImplTest CPU = &BasicCPU{}

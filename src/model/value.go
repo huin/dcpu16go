@@ -3,8 +3,8 @@ package model
 import "fmt"
 
 type Value interface {
-	Write(Context, Word)
-	Read(Context) Word
+	Write(MachineState, Word)
+	Read(MachineState) Word
 	LoadOpValue(WordLoader)
 	String() string
 }
@@ -63,12 +63,12 @@ type RegisterValue struct {
 	Reg RegisterId
 }
 
-func (v *RegisterValue) Write(ctx Context, word Word) {
-	ctx.WriteRegister(v.Reg, word)
+func (v *RegisterValue) Write(state MachineState, word Word) {
+	state.WriteRegister(v.Reg, word)
 }
 
-func (v *RegisterValue) Read(ctx Context) Word {
-	return ctx.Register(v.Reg)
+func (v *RegisterValue) Read(state MachineState) Word {
+	return state.Register(v.Reg)
 }
 
 func (v *RegisterValue) String() string {
@@ -81,13 +81,13 @@ type RegisterAddressValue struct {
 	Reg RegisterId
 }
 
-func (v *RegisterAddressValue) Write(ctx Context, word Word) {
+func (v *RegisterAddressValue) Write(state MachineState, word Word) {
 	// TODO
 	panic("unimplemented")
 }
 
-func (v *RegisterAddressValue) Read(ctx Context) Word {
-	return ctx.ReadMemory(ctx.Register(v.Reg))
+func (v *RegisterAddressValue) Read(state MachineState) Word {
+	return state.ReadMemory(state.Register(v.Reg))
 }
 
 func (v *RegisterAddressValue) String() string {
@@ -100,11 +100,11 @@ type RegisterRelAddressValue struct {
 	Reg RegisterId
 }
 
-func (v *RegisterRelAddressValue) Write(ctx Context, word Word) {
-	ctx.WriteMemory(ctx.Register(v.Reg)+v.Value, word)
+func (v *RegisterRelAddressValue) Write(state MachineState, word Word) {
+	state.WriteMemory(state.Register(v.Reg)+v.Value, word)
 }
 
-func (v *RegisterRelAddressValue) Read(ctx Context) Word {
+func (v *RegisterRelAddressValue) Read(state MachineState) Word {
 	// TODO
 	panic("unimplemented")
 	return 0
@@ -119,13 +119,13 @@ type PopValue struct {
 	noExtraWord
 }
 
-func (v PopValue) Write(ctx Context, word Word) {
+func (v PopValue) Write(state MachineState, word Word) {
 	// TODO
 	panic("unimplemented")
 }
 
-func (v PopValue) Read(ctx Context) Word {
-	return ctx.ReadMemory(ctx.ReadIncSP())
+func (v PopValue) Read(state MachineState) Word {
+	return state.ReadMemory(state.ReadIncSP())
 }
 
 func (v PopValue) String() string {
@@ -137,13 +137,13 @@ type PeekValue struct {
 	noExtraWord
 }
 
-func (v PeekValue) Write(ctx Context, word Word) {
+func (v PeekValue) Write(state MachineState, word Word) {
 	// TODO
 	panic("unimplemented")
 }
 
-func (v PeekValue) Read(ctx Context) Word {
-	return ctx.ReadMemory(ctx.SP())
+func (v PeekValue) Read(state MachineState) Word {
+	return state.ReadMemory(state.SP())
 }
 
 func (v PeekValue) String() string {
@@ -155,11 +155,11 @@ type PushValue struct {
 	noExtraWord
 }
 
-func (v PushValue) Write(ctx Context, word Word) {
-	ctx.WriteMemory(ctx.DecReadSP(), word)
+func (v PushValue) Write(state MachineState, word Word) {
+	state.WriteMemory(state.DecReadSP(), word)
 }
 
-func (v PushValue) Read(ctx Context) Word {
+func (v PushValue) Read(state MachineState) Word {
 	// TODO
 	panic("unimplemented")
 	return 0
@@ -174,12 +174,12 @@ type SpValue struct {
 	noExtraWord
 }
 
-func (v SpValue) Write(ctx Context, word Word) {
-	ctx.WriteSP(word)
+func (v SpValue) Write(state MachineState, word Word) {
+	state.WriteSP(word)
 }
 
-func (v SpValue) Read(ctx Context) Word {
-	return ctx.SP()
+func (v SpValue) Read(state MachineState) Word {
+	return state.SP()
 }
 
 func (v SpValue) String() string {
@@ -191,12 +191,12 @@ type PcValue struct {
 	noExtraWord
 }
 
-func (v PcValue) Write(ctx Context, word Word) {
-	ctx.WritePC(word)
+func (v PcValue) Write(state MachineState, word Word) {
+	state.WritePC(word)
 }
 
-func (v PcValue) Read(ctx Context) Word {
-	return ctx.PC()
+func (v PcValue) Read(state MachineState) Word {
+	return state.PC()
 }
 
 func (v PcValue) String() string {
@@ -208,12 +208,12 @@ type OValue struct {
 	noExtraWord
 }
 
-func (v OValue) Write(ctx Context, word Word) {
-	ctx.WriteO(word)
+func (v OValue) Write(state MachineState, word Word) {
+	state.WriteO(word)
 }
 
-func (v OValue) Read(ctx Context) Word {
-	return ctx.O()
+func (v OValue) Read(state MachineState) Word {
+	return state.O()
 }
 
 func (v OValue) String() string {
@@ -225,12 +225,12 @@ type AddressValue struct {
 	extraWord
 }
 
-func (v *AddressValue) Write(ctx Context, word Word) {
-	ctx.WriteMemory(v.extraWord.Value, word)
+func (v *AddressValue) Write(state MachineState, word Word) {
+	state.WriteMemory(v.extraWord.Value, word)
 }
 
-func (v *AddressValue) Read(ctx Context) Word {
-	return ctx.ReadMemory(v.extraWord.Value)
+func (v *AddressValue) Read(state MachineState) Word {
+	return state.ReadMemory(v.extraWord.Value)
 }
 
 func (v *AddressValue) String() string {
@@ -242,11 +242,11 @@ type WordValue struct {
 	extraWord
 }
 
-func (v *WordValue) Write(ctx Context, word Word) {
+func (v *WordValue) Write(state MachineState, word Word) {
 	// No-op.
 }
 
-func (v *WordValue) Read(ctx Context) Word {
+func (v *WordValue) Read(state MachineState) Word {
 	return v.extraWord.Value
 }
 
@@ -260,11 +260,11 @@ type LiteralValue struct {
 	Literal Word
 }
 
-func (v *LiteralValue) Write(ctx Context, word Word) {
+func (v *LiteralValue) Write(state MachineState, word Word) {
 	// No-op.
 }
 
-func (v *LiteralValue) Read(ctx Context) Word {
+func (v *LiteralValue) Read(state MachineState) Word {
 	return v.Literal
 }
 

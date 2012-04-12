@@ -1,9 +1,9 @@
 package model
 
-func Step(ctx Context) error {
-	op, err := OperationLoad(ctx)
+func Step(state MachineState) error {
+	op, err := OperationLoad(state)
 	if err != nil {
 		return err
 	}
-	return op.Execute(ctx)
+	return op.Execute(state)
 }
