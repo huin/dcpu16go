@@ -138,7 +138,17 @@ func TestOperationExecute(t *testing.T) {
 			0x1234, &DivOp{binOpValue(0x0100)},
 			0x0012, 0x3400,
 		},
-		// TODO ModOp
+		// ModOp
+		{
+			"MOD 12 % 3 = 0",
+			12, &ModOp{binOpValue(3)},
+			0, 0,
+		},
+		{
+			"MOD 0x1234 % 0x0100 = 0x0034, with carry=0x0000",
+			0x1234, &ModOp{binOpValue(0x0100)},
+			0x0034, 0x0000,
+		},
 		// ShlOp
 		{
 			"SHL 0x0123 << 4 = 0x1230",
@@ -160,6 +170,18 @@ func TestOperationExecute(t *testing.T) {
 			"SHR 0x1230 >> 8 = 0x0001, with carry=0x2300",
 			0x0123, &ShrOp{binOpValue(8)},
 			0x0001, 0x2300,
+		},
+		// AndOp
+		{
+			"AND 0x1230 & 0x0410 = 0x0010",
+			0x1230, &AndOp{binOpValue(0x0410)},
+			0x0010, 0x0000,
+		},
+		// BorOp
+		{
+			"BOR 0x1230 | 0x0410 = 0x1630",
+			0x1230, &BorOp{binOpValue(0x0410)},
+			0x1630, 0x0000,
 		},
 	}
 

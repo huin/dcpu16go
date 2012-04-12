@@ -212,8 +212,9 @@ type ModOp struct {
 }
 
 func (o *ModOp) Execute(ctx Context) error {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	o.A.Write(ctx, a%b)
+	return nil
 }
 
 func (o *ModOp) String() string {
@@ -260,8 +261,9 @@ type AndOp struct {
 }
 
 func (o *AndOp) Execute(ctx Context) error {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	o.A.Write(ctx, a&b)
+	return nil
 }
 
 func (o *AndOp) String() string {
@@ -274,8 +276,9 @@ type BorOp struct {
 }
 
 func (o *BorOp) Execute(ctx Context) error {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	o.A.Write(ctx, a|b)
+	return nil
 }
 
 func (o *BorOp) String() string {
