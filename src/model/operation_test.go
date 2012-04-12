@@ -116,6 +116,28 @@ func TestOperationExecute(t *testing.T) {
 			0x000d, &SubOp{binOpValue(0x000f)},
 			0xfffe, 0xffff,
 		},
+		// MulOp
+		{
+			"MUL 5 * 9 = 45",
+			5, &MulOp{binOpValue(9)},
+			45, 0,
+		},
+		{
+			"MUL 0x1234 * 0x0100 = 0x3400, with carry=0x0012",
+			0x1234, &MulOp{binOpValue(0x0100)},
+			0x3400, 0x0012,
+		},
+		// DivOp
+		{
+			"DIV 12 / 3 = 4",
+			12, &DivOp{binOpValue(3)},
+			4, 0,
+		},
+		{
+			"DIV 0x1234 / 0x0100 = 0x0012, with carry=0x3400",
+			0x1234, &DivOp{binOpValue(0x0100)},
+			0x0012, 0x3400,
+		},
 	}
 
 	for _, test := range tests {

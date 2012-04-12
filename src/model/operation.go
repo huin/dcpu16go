@@ -178,8 +178,11 @@ type MulOp struct {
 }
 
 func (o *MulOp) Execute(ctx Context) error {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	wideA := uint32(a) * uint32(b)
+	o.A.Write(ctx, Word(wideA&0xffff))
+	ctx.WriteO(Word(wideA >> 16))
+	return nil
 }
 
 func (o *MulOp) String() string {
@@ -192,8 +195,11 @@ type DivOp struct {
 }
 
 func (o *DivOp) Execute(ctx Context) error {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(ctx), o.B.Read(ctx)
+	result := (uint32(a)<<16) / uint32(b)
+	o.A.Write(ctx, Word(result>>16))
+	ctx.WriteO(Word(result & 0xffff))
+	return nil
 }
 
 func (o *DivOp) String() string {
