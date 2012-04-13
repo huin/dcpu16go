@@ -82,8 +82,7 @@ type RegisterAddressValue struct {
 }
 
 func (v *RegisterAddressValue) Write(state MachineState, word Word) {
-	// TODO
-	panic("unimplemented")
+	state.WriteMemory(state.Register(v.Reg), word)
 }
 
 func (v *RegisterAddressValue) Read(state MachineState) Word {
@@ -105,9 +104,7 @@ func (v *RegisterRelAddressValue) Write(state MachineState, word Word) {
 }
 
 func (v *RegisterRelAddressValue) Read(state MachineState) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return state.ReadMemory(state.Register(v.Reg) + v.Value)
 }
 
 func (v *RegisterRelAddressValue) String() string {
@@ -120,8 +117,7 @@ type PopValue struct {
 }
 
 func (v PopValue) Write(state MachineState, word Word) {
-	// TODO
-	panic("unimplemented")
+	state.WriteMemory(state.ReadIncSP(), word)
 }
 
 func (v PopValue) Read(state MachineState) Word {
@@ -138,8 +134,7 @@ type PeekValue struct {
 }
 
 func (v PeekValue) Write(state MachineState, word Word) {
-	// TODO
-	panic("unimplemented")
+	state.WriteMemory(state.SP(), word)
 }
 
 func (v PeekValue) Read(state MachineState) Word {
@@ -160,9 +155,7 @@ func (v PushValue) Write(state MachineState, word Word) {
 }
 
 func (v PushValue) Read(state MachineState) Word {
-	// TODO
-	panic("unimplemented")
-	return 0
+	return state.ReadMemory(state.DecReadSP())
 }
 
 func (v PushValue) String() string {

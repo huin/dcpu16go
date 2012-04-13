@@ -9,7 +9,7 @@ type ExpMem struct {
 	Expected []Word
 }
 
-func (exp *ExpMem) CheckMem(t *testing.T, testName string, mem *BasicMemoryState) bool {
+func (exp *ExpMem) StateCheck(t *testing.T, testName string, mem *BasicMachineState) bool {
 	for i := range exp.Expected {
 		if exp.Expected[i] != mem.Data[exp.Offset+i] {
 			t.Errorf("%s: memory state at 0x%04x", testName, exp.Offset+i)
@@ -70,7 +70,7 @@ func (exp *ExpState) StateCheck(t *testing.T, testName string, state *BasicMachi
 	}
 
 	for i := range exp.Mems {
-		if !exp.Mems[i].CheckMem(t, testName, &state.BasicMemoryState) {
+		if !exp.Mems[i].StateCheck(t, testName, state) {
 			return false
 		}
 	}

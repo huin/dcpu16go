@@ -306,10 +306,10 @@ type IfeOp struct {
 
 func (o *IfeOp) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	if a != b {
-		return OperationSkip(state)
+	if a == b {
+		return nil
 	}
-	return nil
+	return OperationSkip(state)
 }
 
 func (o *IfeOp) String() string {
@@ -323,10 +323,10 @@ type IfnOp struct {
 
 func (o *IfnOp) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	if a == b {
-		return OperationSkip(state)
+	if a != b {
+		return nil
 	}
-	return nil
+	return OperationSkip(state)
 }
 
 func (o *IfnOp) String() string {
@@ -339,8 +339,11 @@ type IfgOp struct {
 }
 
 func (o *IfgOp) Execute(state MachineState) error {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(state), o.B.Read(state)
+	if a > b {
+		return nil
+	}
+	return OperationSkip(state)
 }
 
 func (o *IfgOp) String() string {
@@ -353,8 +356,11 @@ type IfbOp struct {
 }
 
 func (o *IfbOp) Execute(state MachineState) error {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(state), o.B.Read(state)
+	if (a & b) != 0 {
+		return OperationSkip(state)
+	}
+	return nil
 }
 
 func (o *IfbOp) String() string {

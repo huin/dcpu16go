@@ -1,17 +1,18 @@
 package model
 
 import (
+	"fmt"
 	"testing"
 )
 
 func TestNoValueString(t *testing.T) {
-	type T struct {
+	type Test struct {
 		Expected    string
 		ValueWord   Word
 		HasNextWord bool
 		NextWord    Word
 	}
-	tests := []T{
+	tests := []Test{
 		{"A", 0x00, false, 0},
 		{"J", 0x07, false, 0},
 		{"[A]", 0x08, false, 0},
@@ -45,6 +46,146 @@ func TestNoValueString(t *testing.T) {
 		if test.Expected != str {
 			t.Errorf("Value %v (%02x) disagrees on string repr (expected %q, got %q)",
 				value, test.ValueWord, test.Expected, str)
+		}
+	}
+}
+
+func TestValueWrite(t *testing.T) {
+	type Test struct {
+		Value     Value
+		InitCPU   BasicCPU
+		WriteWord Word
+		ExpStates []StateChecker
+		ExpCPU    BasicCPU
+	}
+
+	tests := []Test{
+		{
+			Value:     &RegisterAddressValue{Reg: RegA},
+			InitCPU:   BasicCPU{registers: [8]Word{0x1234}},
+			WriteWord: 0x5678,
+			ExpStates: []StateChecker{
+				&ExpMem{0x1234, []Word{0x5678}},
+			},
+			ExpCPU: BasicCPU{registers: [8]Word{0x1234}},
+		},
+		{
+			Value:     &RegisterRelAddressValue{extraWord{5}, RegA},
+			InitCPU:   BasicCPU{registers: [8]Word{0x1234}},
+			WriteWord: 0x5678,
+			ExpStates: []StateChecker{
+				&ExpMem{0x1239, []Word{0x5678}},
+			},
+			ExpCPU: BasicCPU{registers: [8]Word{0x1234}},
+		},
+		{
+			Value:     PopValue{},
+			InitCPU:   BasicCPU{sp: 0xfffe},
+			WriteWord: 0x5678,
+			ExpStates: []StateChecker{
+				&ExpMem{0xfffe, []Word{0x5678, 0x0000}},
+			},
+			ExpCPU: BasicCPU{sp: 0xffff},
+		},
+		{
+			Value:     PeekValue{},
+			InitCPU:   BasicCPU{sp: 0xfffe},
+			WriteWord: 0x5678,
+			ExpStates: []StateChecker{
+				&ExpMem{0xfffe, []Word{0x5678, 0x0000}},
+			},
+			ExpCPU: BasicCPU{sp: 0xfffe},
+		},
+		{
+			Value:     PushValue{},
+			InitCPU:   BasicCPU{sp: 0xffff},
+			WriteWord: 0x5678,
+			ExpStates: []StateChecker{
+				&ExpMem{0xfffe, []Word{0x5678, 0x0000}},
+			},
+			ExpCPU: BasicCPU{sp: 0xfffe},
+		},
+	}
+
+	for _, test := range tests {
+		var state BasicMachineState
+		state.Init()
+		state.BasicCPU = test.InitCPU
+		test.Value.Write(&state, test.WriteWord)
+		name := fmt.Sprintf("%v write 0x%04x", test.Value, test.WriteWord)
+		for _, expState := range test.ExpStates {
+			expState.StateCheck(t, name, &state)
+		}
+		if !CPUEquals(&test.ExpCPU, &state.BasicCPU) {
+			t.Errorf("%v\ngot CPU state %#v\n     expected %#v", test.Value, state.BasicCPU, test.ExpCPU)
+		}
+	}
+}
+
+func TestValueRead(t *testing.T) {
+	type Test struct {
+		Value         Value
+		InitCPU       BasicCPU
+		InitMemOffset Word
+		InitMem       []Word
+		ExpRead       Word
+		ExpCPU        BasicCPU
+	}
+
+	tests := []Test{
+		{
+			Value:         &RegisterAddressValue{Reg: RegA},
+			InitCPU:       BasicCPU{registers: [8]Word{0x1234}},
+			InitMemOffset: 0x1234,
+			InitMem:       []Word{0x5678},
+			ExpRead:       0x5678,
+			ExpCPU:        BasicCPU{registers: [8]Word{0x1234}},
+		},
+		{
+			Value:         &RegisterRelAddressValue{extraWord{5}, RegA},
+			InitCPU:       BasicCPU{registers: [8]Word{0x1234}},
+			InitMemOffset: 0x1239,
+			InitMem:       []Word{0x5678},
+			ExpRead:       0x5678,
+			ExpCPU:        BasicCPU{registers: [8]Word{0x1234}},
+		},
+		{
+			Value:         PopValue{},
+			InitCPU:       BasicCPU{sp: 0xfffe},
+			InitMemOffset: 0xfffe,
+			InitMem:       []Word{0x5678, 0x0000},
+			ExpRead:       0x5678,
+			ExpCPU:        BasicCPU{sp: 0xffff},
+		},
+		{
+			Value:         PeekValue{},
+			InitCPU:       BasicCPU{sp: 0xfffe},
+			InitMemOffset: 0xfffe,
+			InitMem:       []Word{0x5678, 0x0000},
+			ExpRead:       0x5678,
+			ExpCPU:        BasicCPU{sp: 0xfffe},
+		},
+		{
+			Value:         PushValue{},
+			InitCPU:       BasicCPU{sp: 0xffff},
+			InitMemOffset: 0xfffe,
+			InitMem:       []Word{0x5678, 0x0000},
+			ExpRead:       0x5678,
+			ExpCPU:        BasicCPU{sp: 0xfffe},
+		},
+	}
+
+	for _, test := range tests {
+		var state BasicMachineState
+		state.Init()
+		copy(state.BasicMemoryState.Data[test.InitMemOffset:], test.InitMem)
+		state.BasicCPU = test.InitCPU
+		result := test.Value.Read(&state)
+		if test.ExpRead != result {
+			t.Errorf("%v returned 0x%04x, expected 0x%04x", test.Value, result, test.ExpRead)
+		}
+		if !CPUEquals(&test.ExpCPU, &state.BasicCPU) {
+			t.Errorf("%v\ngot CPU state %#v\n     expected %#v", test.Value, state.BasicCPU, test.ExpCPU)
 		}
 	}
 }
