@@ -183,6 +183,12 @@ func TestOperationExecute(t *testing.T) {
 			0x1230, &BorOp{binOpValue(0x0410)},
 			0x1630, 0x0000,
 		},
+		// XorOp
+		{
+			"XOR 0x1230 ^ 0x0410 = 0x1620",
+			0x1230, &XorOp{binOpValue(0x0410)},
+			0x1620, 0x0000,
+		},
 	}
 
 	for _, test := range tests {

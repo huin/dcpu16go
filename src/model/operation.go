@@ -291,8 +291,9 @@ type XorOp struct {
 }
 
 func (o *XorOp) Execute(state MachineState) error {
-	// TODO
-	panic("unimplemented")
+	a, b := o.A.Read(state), o.B.Read(state)
+	o.A.Write(state, a^b)
+	return nil
 }
 
 func (o *XorOp) String() string {
