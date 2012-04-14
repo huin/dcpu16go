@@ -1,4 +1,5 @@
 /bin
+/env
 /pkg
 /src
 /examples/test.dasm16
