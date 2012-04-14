@@ -1,9 +1,9 @@
 package model
 
 func Step(state MachineState) error {
-	op, err := OperationLoad(state)
+	instruction, err := InstructionLoad(state)
 	if err != nil {
 		return err
 	}
-	return op.Execute(state)
+	return instruction.Execute(state)
 }

@@ -37,7 +37,7 @@ func TestNoValueString(t *testing.T) {
 			wordLoader.Words = []Word{test.NextWord}
 		}
 		value := ValueFromWord(test.ValueWord)
-		value.LoadOpValue(wordLoader)
+		value.LoadInstValue(wordLoader)
 		if !wordLoader.exhausted() {
 			t.Errorf("Value %v (%02x) did not consume next word",
 				value, test.ValueWord)

@@ -56,7 +56,7 @@ func main() {
 	defer outfile.Close()
 
 	for {
-		op, err := model.OperationLoad(wordLoader)
+		instruction, err := model.InstructionLoad(wordLoader)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -64,6 +64,6 @@ func main() {
 				log.Fatal(err)
 			}
 		}
-		fmt.Fprintln(outfile, op)
+		fmt.Fprintln(outfile, instruction)
 	}
 }

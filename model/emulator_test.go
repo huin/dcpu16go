@@ -125,14 +125,14 @@ func TestStep(t *testing.T) {
 			},
 		},
 		{
-			Name:    "unknown operation",
+			Name:    "unknown instruction",
 			InitMem: []Word{0xfff0},
 			ExpStates: []StateChecker{
 				&ErrState{NumSteps: 1},
 			},
 		},
 		{
-			Name:    "IFE 0, 1 / unknown operation",
+			Name:    "IFE 0, 1 / unknown instruction",
 			InitMem: []Word{0x860c, 0xfff0},
 			ExpStates: []StateChecker{
 				&ErrState{NumSteps: 1},

@@ -5,7 +5,7 @@ import "fmt"
 type Value interface {
 	Write(MachineState, Word)
 	Read(MachineState) Word
-	LoadOpValue(WordLoader) error
+	LoadInstValue(WordLoader) error
 	String() string
 }
 
@@ -46,7 +46,7 @@ func ValueFromWord(w Word) Value {
 
 type noExtraWord struct{}
 
-func (v noExtraWord) LoadOpValue(WordLoader) error {
+func (v noExtraWord) LoadInstValue(WordLoader) error {
 	return nil
 }
 
@@ -54,7 +54,7 @@ type extraWord struct {
 	Value Word
 }
 
-func (v *extraWord) LoadOpValue(wordLoader WordLoader) error {
+func (v *extraWord) LoadInstValue(wordLoader WordLoader) error {
 	var err error
 	v.Value, err = wordLoader.WordLoad()
 	return err
