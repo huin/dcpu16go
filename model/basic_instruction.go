@@ -35,9 +35,9 @@ func (is *BasicInstructionSet) Instruction(w Word) (Instruction, error) {
 			return &SubInst{binaryInst{a, b}}, nil
 		case 0x4: // MUL a, b - sets a to a*b, sets O to ((a*b)>>16)&0xffff
 			return &MulInst{binaryInst{a, b}}, nil
-		case 0x5: // DIV a, b - sets a to a/b, sets O to ((a<<16)/b)&0xffff. if b==0, sets a and O to 0 instructionead.
+		case 0x5: // DIV a, b - sets a to a/b, sets O to ((a<<16)/b)&0xffff. if b==0, sets a and O to 0 instead.
 			return &DivInst{binaryInst{a, b}}, nil
-		case 0x6: // MOD a, b - sets a to a%b. if b==0, sets a to 0 instructionead.
+		case 0x6: // MOD a, b - sets a to a%b. if b==0, sets a to 0 instead.
 			return &ModInst{binaryInst{a, b}}, nil
 		case 0x7: // SHL a, b - sets a to a<<b, sets O to ((a<<b)>>16)&0xffff
 			return &ShlInst{binaryInst{a, b}}, nil
