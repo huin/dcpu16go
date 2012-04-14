@@ -1,7 +1,7 @@
 package model
 
 func Step(state MachineState) error {
-	instruction, err := InstructionLoad(state)
+	instruction, err := InstructionLoad(state, state)
 	if err != nil {
 		return err
 	}

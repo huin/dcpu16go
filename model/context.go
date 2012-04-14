@@ -4,6 +4,10 @@ type WordLoader interface {
 	WordLoad() (Word, error)
 }
 
+type InstructionSet interface {
+	Instruction(word Word) (Instruction, error)
+}
+
 type CPU interface {
 	Register(id RegisterId) Word
 	WriteRegister(id RegisterId, value Word)
@@ -37,16 +41,19 @@ type Memory interface {
 
 type MachineState interface {
 	WordLoader
+	InstructionSet
 	CPU
 	Memory
 }
 
 type BasicMachineState struct {
+	BasicInstructionSet
 	BasicCPU
 	BasicMemoryState
 }
 
 func (state *BasicMachineState) Init() {
+	state.BasicInstructionSet.Init()
 	state.BasicCPU.Init()
 }
 
