@@ -1,4 +1,6 @@
-all: bin/dis
+all: \
+    bin/asm \
+    bin/dis \
 
 clean:
 	rm -f examples/test.{bin,dasm16}
@@ -6,7 +8,7 @@ clean:
 
 examples: \
     examples/test.bin \
-    examples/test.dasm16
+    examples/test.dasm16 \
 
 test:
 	@go test ./...
@@ -14,8 +16,8 @@ test:
 fmt:
 	@go fmt ./...
 
-bin/dis:
-	@go build -o bin/dis cmd/dis/*.go
+bin/%:
+	@go build -o bin/$(notdir $@) cmd/$(notdir $@)/*.go
 
 %.bin: %.hex
 	xxd -r $< $@
