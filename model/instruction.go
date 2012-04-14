@@ -16,11 +16,11 @@ func InstructionSkip(wordLoader WordLoader) error {
 	if err != nil {
 		return err
 	}
-	gc, err := gcFromWord(word)
+	instruction, err := instructionFromWord(word)
 	if err != nil {
 		return err
 	}
-	err = gc.LoadNextWords(wordLoader)
+	err = instruction.LoadNextWords(wordLoader)
 	if err != nil {
 		return err
 	}
@@ -32,26 +32,26 @@ func InstructionLoad(wordLoader WordLoader) (Instruction, error) {
 	if err != nil {
 		return nil, err
 	}
-	gc, err := gcFromWord(word)
+	instruction, err := instructionFromWord(word)
 	if err != nil {
 		return nil, err
 	}
-	err = gc.LoadNextWords(wordLoader)
+	err = instruction.LoadNextWords(wordLoader)
 	if err != nil {
 		return nil, err
 	}
-	return gc, err
+	return instruction, err
 }
 
-func gcFromWord(w Word) (Instruction, error) {
+func instructionFromWord(w Word) (Instruction, error) {
 	opCode := w & 0x000f
 	if opCode == 0x0 {
-		// Non-basic gc.
+		// Non-basic instruction.
 		extOpCode := (w >> 4) & 0x003f
 		a := ValueFromWord((w >> 10) & 0x003f)
 		switch extOpCode {
 		case 0x00: // reserved for future expansion
-		case 0x01: // JSR a - pushes the address of the next gc to the stack, then sets PC to a
+		case 0x01: // JSR a - pushes the address of the next instruction to the stack, then sets PC to a
 			return &JsrInst{unaryInst{a}}, nil
 		default: // 0x02-0x3f: reserved
 		}
@@ -82,20 +82,20 @@ func gcFromWord(w Word) (Instruction, error) {
 			return &BorInst{binaryInst{a, b}}, nil
 		case 0xb: // XOR a, b - sets a to a^b
 			return &XorInst{binaryInst{a, b}}, nil
-		case 0xc: // IFE a, b - performs next gc only if a==b
+		case 0xc: // IFE a, b - performs next instruction only if a==b
 			return &IfeInst{binaryInst{a, b}}, nil
-		case 0xd: // IFN a, b - performs next gc only if a!=b
+		case 0xd: // IFN a, b - performs next instruction only if a!=b
 			return &IfnInst{binaryInst{a, b}}, nil
-		case 0xe: // IFG a, b - performs next gc only if a>b
+		case 0xe: // IFG a, b - performs next instruction only if a>b
 			return &IfgInst{binaryInst{a, b}}, nil
-		case 0xf: // IFB a, b - performs next gc only if (a&b)!=0
+		case 0xf: // IFB a, b - performs next instruction only if (a&b)!=0
 			return &IfbInst{binaryInst{a, b}}, nil
 		}
 	}
 	panic(fmt.Errorf("Instruction code 0x%x out of range", opCode))
 }
 
-// unaryInst forms common data and code for gcs that take one value.
+// unaryInst forms common data and code for instructions that take one value.
 type unaryInst struct {
 	A Value
 }
@@ -108,7 +108,7 @@ func (o *unaryInst) format(name string) string {
 	return fmt.Sprintf("%s %v", name, o.A)
 }
 
-// 0x01: JSR a - pushes the address of the next gc to the stack, then sets PC to a
+// 0x01: JSR a - pushes the address of the next instruction to the stack, then sets PC to a
 type JsrInst struct {
 	unaryInst
 }
@@ -123,7 +123,7 @@ func (o *JsrInst) String() string {
 	return o.unaryInst.format("JSR")
 }
 
-// binaryInst forms common data and code for gcs that take two values (A
+// binaryInst forms common data and code for instructions that take two values (A
 // and B).
 type binaryInst struct {
 	A, B Value
@@ -317,7 +317,7 @@ func (o *XorInst) String() string {
 	return o.binaryInst.format("XOR")
 }
 
-// 0xc: IFE a, b - performs next gc only if a==b
+// 0xc: IFE a, b - performs next instruction only if a==b
 type IfeInst struct {
 	binaryInst
 }
@@ -334,7 +334,7 @@ func (o *IfeInst) String() string {
 	return o.binaryInst.format("IFE")
 }
 
-// 0xd: IFN a, b - performs next gc only if a!=b
+// 0xd: IFN a, b - performs next instruction only if a!=b
 type IfnInst struct {
 	binaryInst
 }
@@ -351,7 +351,7 @@ func (o *IfnInst) String() string {
 	return o.binaryInst.format("IFN")
 }
 
-// 0xe: IFG a, b - performs next gc only if a>b
+// 0xe: IFG a, b - performs next instruction only if a>b
 type IfgInst struct {
 	binaryInst
 }
@@ -368,7 +368,7 @@ func (o *IfgInst) String() string {
 	return o.binaryInst.format("IFG")
 }
 
-// 0xf: IFB a, b - performs next gc only if (a&b)!=0
+// 0xf: IFB a, b - performs next instruction only if (a&b)!=0
 type IfbInst struct {
 	binaryInst
 }
