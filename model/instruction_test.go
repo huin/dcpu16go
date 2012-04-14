@@ -17,7 +17,7 @@ func TestInstructionExecute(t *testing.T) {
 	type Test struct {
 		Name  string
 		InitA Word
-		Inst    Instruction
+		Inst  Instruction
 		ExpA  Word
 		ExpO  Word
 	}

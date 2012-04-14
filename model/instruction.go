@@ -12,19 +12,8 @@ type Instruction interface {
 
 func InstructionSkip(wordLoader WordLoader, set InstructionSet) error {
 	// TODO Efficient version that doesn't hit memory?
-	word, err := wordLoader.WordLoad()
-	if err != nil {
-		return err
-	}
-	instruction, err := set.Instruction(word)
-	if err != nil {
-		return err
-	}
-	err = instruction.LoadNextWords(wordLoader)
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err := InstructionLoad(wordLoader, set)
+	return err
 }
 
 func InstructionLoad(wordLoader WordLoader, set InstructionSet) (Instruction, error) {
