@@ -135,9 +135,15 @@ func (is *BasicInstructionSet) Instruction(w Word) (Instruction, error) {
 }
 
 func InstructionSkip(wordLoader WordLoader, set InstructionSet) error {
-	// TODO Efficient version that doesn't hit memory?
-	_, err := InstructionLoad(wordLoader, set)
-	return err
+	word, err := wordLoader.WordLoad()
+	if err != nil {
+		return err
+	}
+	count, err := set.NumExtraWords(word)
+	if err != nil {
+		return err
+	}
+	return wordLoader.SkipWords(count)
 }
 
 func InstructionLoad(wordLoader WordLoader, set InstructionSet) (Instruction, error) {
