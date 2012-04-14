@@ -6,6 +6,7 @@ type Value interface {
 	Write(MachineState, Word)
 	Read(MachineState) Word
 	LoadInstValue(WordLoader) error
+	NumExtraWords() Word
 	String() string
 }
 
@@ -50,6 +51,10 @@ func (v noExtraWord) LoadInstValue(WordLoader) error {
 	return nil
 }
 
+func (v noExtraWord) NumExtraWords() Word {
+	return 0
+}
+
 type extraWord struct {
 	Value Word
 }
@@ -58,6 +63,10 @@ func (v *extraWord) LoadInstValue(wordLoader WordLoader) error {
 	var err error
 	v.Value, err = wordLoader.WordLoad()
 	return err
+}
+
+func (v *extraWord) NumExtraWords() Word {
+	return 1
 }
 
 // 0x00-0x07: register

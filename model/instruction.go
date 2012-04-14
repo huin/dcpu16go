@@ -4,10 +4,32 @@ import (
 	"fmt"
 )
 
+type InvalidUnaryOpCodeError Word
+
+func (err InvalidUnaryOpCodeError) Error() string {
+	return fmt.Sprintf("invalid unary opcode 0x%02x", Word(err))
+}
+
+type InvalidBinaryOpCodeError Word
+
+func (err InvalidBinaryOpCodeError) Error() string {
+	return fmt.Sprintf("invalid binary opcode 0x%02x", Word(err))
+}
+
 type Instruction interface {
 	LoadNextWords(WordLoader) error
 	Execute(MachineState) error // TODO Return ticks.
 	String() string
+}
+
+type UnaryInstruction interface {
+	Instruction
+	SetUnaryValue(Value)
+}
+
+type BinaryInstruction interface {
+	Instruction
+	SetBinaryValue(Value, Value)
 }
 
 func InstructionSkip(wordLoader WordLoader, set InstructionSet) error {
@@ -37,6 +59,10 @@ type unaryInst struct {
 	A Value
 }
 
+func (o *unaryInst) SetUnaryValue(a Value) {
+	o.A = a
+}
+
 func (o *unaryInst) LoadNextWords(wordLoader WordLoader) error {
 	return o.A.LoadInstValue(wordLoader)
 }
@@ -64,6 +90,11 @@ func (o *JsrInst) String() string {
 // and B).
 type binaryInst struct {
 	A, B Value
+}
+
+func (o *binaryInst) SetBinaryValue(a, b Value) {
+	o.A = a
+	o.B = b
 }
 
 func (o *binaryInst) LoadNextWords(wordLoader WordLoader) error {

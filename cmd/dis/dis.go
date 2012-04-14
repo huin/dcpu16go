@@ -29,6 +29,11 @@ func (r *ReaderWordLoader) WordLoad() (model.Word, error) {
 	return word, err
 }
 
+func (r *ReaderWordLoader) SkipWords(model.Word) error {
+	// Shouldn't be required here.
+	panic("unexpected ReaderWordLoader SkipWords call")
+}
+
 func main() {
 	flag.Parse()
 
@@ -55,8 +60,10 @@ func main() {
 	}
 	defer outfile.Close()
 
+	var instructionSet model.BasicInstructionSet
+
 	for {
-		instruction, err := model.InstructionLoad(wordLoader)
+		instruction, err := model.InstructionLoad(wordLoader, &instructionSet)
 		if err != nil {
 			if err == io.EOF {
 				break

@@ -2,10 +2,18 @@ package model
 
 type WordLoader interface {
 	WordLoad() (Word, error)
+	SkipWords(Word) error
 }
 
 type InstructionSet interface {
+	// Instruction returns the instruction for the given word. The returned
+	// Instruction must have LoadNextWords called on it before it will function
+	// properly.
 	Instruction(word Word) (Instruction, error)
+
+	// NumExtraWords returns the number of extra words required to be read for
+	// the given instruction.
+	NumExtraWords(word Word) (Word, error)
 }
 
 type CPU interface {
@@ -53,10 +61,14 @@ type BasicMachineState struct {
 }
 
 func (state *BasicMachineState) Init() {
-	state.BasicInstructionSet.Init()
 	state.BasicCPU.Init()
 }
 
 func (state *BasicMachineState) WordLoad() (Word, error) {
 	return state.BasicMemoryState.ReadMemory(state.ReadIncPC()), nil
+}
+
+func (state *BasicMachineState) SkipWords(count Word) error {
+	state.WritePC(state.PC() + count)
+	return nil
 }

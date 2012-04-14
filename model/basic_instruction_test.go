@@ -21,6 +21,14 @@ func (l *FakeWordLoader) WordLoad() (Word, error) {
 	return w, nil
 }
 
+func (l *FakeWordLoader) SkipWords(count Word) error {
+	l.Loc += int(count)
+	if l.Loc >= len(l.Words) {
+		l.t.Fatalf("exceeded bounds on %#v", *l)
+	}
+	return nil
+}
+
 func (l *FakeWordLoader) exhausted() bool {
 	return l.Loc == len(l.Words)
 }
@@ -58,12 +66,11 @@ func TestInstructionLoad(t *testing.T) {
 		{"SET PC, 0x001a", []Word{0x7dc1, 0x001a}},
 	}
 
-	instructionSet := &BasicInstructionSet{}
-	instructionSet.Init()
+	var instructionSet BasicInstructionSet
 
 	for _, test := range tests {
 		wordLoader := &FakeWordLoader{t, test.Words, 0}
-		instruction, err := InstructionLoad(wordLoader, instructionSet)
+		instruction, err := InstructionLoad(wordLoader, &instructionSet)
 		if err != nil {
 			t.Errorf("Instruction %#v returned error %v", test.Words, err)
 			continue
