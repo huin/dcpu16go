@@ -12,7 +12,6 @@ func splitOpWord(w Word) (upper6, middle6, lower4 Word) {
 // returned is only good for use until the next call to the Instruction method.
 type BasicInstructionSet struct {
 	initialized bool
-	unarySet    [2]UnaryInstruction
 	jsrInst     JsrInst
 	binarySet   [0x10]BinaryInstruction
 	setInst     SetInst
@@ -30,13 +29,14 @@ type BasicInstructionSet struct {
 	ifnInst     IfnInst
 	ifgInst     IfgInst
 	ifbInst     IfbInst
+
+	// Use separate pools of values so that two values in play at the same time
+	// don't interfere (see doc for BasicValueSet).
+	aValueSet BasicValueSet
+	bValueSet BasicValueSet
 }
 
 func (is *BasicInstructionSet) init() {
-	is.unarySet = [2]UnaryInstruction{
-		nil, // Reserved for future expansion.
-		&is.jsrInst,
-	}
 	is.binarySet = [0x10]BinaryInstruction{
 		nil, // Indicates unary instruction.
 		&is.setInst, &is.addInst, &is.subInst, &is.mulInst,
@@ -46,39 +46,61 @@ func (is *BasicInstructionSet) init() {
 	}
 }
 
+func (is *BasicInstructionSet) unaryInstruction(upper6, middle6 Word) (instruction UnaryInstruction, a Value, err error) {
+	if middle6 != 0x001 {
+		err = InvalidUnaryOpCodeError(middle6)
+		return
+	}
+	instruction = &is.jsrInst
+	a, err = is.aValueSet.Value(upper6)
+	return
+}
+
+func (is *BasicInstructionSet) binaryInstruction(upper6, middle6, lower4 Word) (instruction BinaryInstruction, a, b Value, err error) {
+	opCode := lower4
+	if int(opCode) >= len(is.binarySet) {
+		// Shouldn't happen with the given set.
+		err = InvalidBinaryOpCodeError(opCode)
+		return
+	}
+	instruction = is.binarySet[opCode]
+	if instruction == nil {
+		// Shouldn't happen with the given set.
+		err = InvalidBinaryOpCodeError(opCode)
+		return
+	}
+	a, err = is.aValueSet.Value(middle6)
+	if err != nil {
+		return
+	}
+	b, err = is.bValueSet.Value(upper6)
+	if err != nil {
+		return
+	}
+	return
+}
+
 func (is *BasicInstructionSet) NumExtraWords(w Word) (Word, error) {
 	if !is.initialized {
 		is.init()
 	}
 
-	upper6, middle6, opCode := splitOpWord(w)
+	upper6, middle6, lower4 := splitOpWord(w)
 
-	if opCode != 0 {
+	if lower4 != 0 {
 		// Binary instruction.
-		if int(opCode) >= len(is.binarySet) {
-			// Shouldn't happen with the given set.
-			return 0, InvalidBinaryOpCodeError(opCode)
+		_, a, b, err := is.binaryInstruction(upper6, middle6, lower4)
+		if err != nil {
+			return 0, err
 		}
-		instruction := is.binarySet[opCode]
-		if instruction == nil {
-			// Shouldn't happen with the given set.
-			return 0, InvalidBinaryOpCodeError(opCode)
-		}
-		a := ValueFromWord(middle6)
-		b := ValueFromWord(upper6)
 		return a.NumExtraWords() + b.NumExtraWords(), nil
 	}
 
 	// Unary instruction.
-	uniOpCode := middle6
-	if int(uniOpCode) >= len(is.unarySet) {
-		return 0, InvalidUnaryOpCodeError(uniOpCode)
+	_, a, err := is.unaryInstruction(upper6, middle6)
+	if err != nil {
+		return 0, err
 	}
-	instruction := is.unarySet[uniOpCode]
-	if instruction == nil {
-		return 0, InvalidUnaryOpCodeError(uniOpCode)
-	}
-	a := ValueFromWord(upper6)
 	return a.NumExtraWords(), nil
 }
 
@@ -87,35 +109,23 @@ func (is *BasicInstructionSet) Instruction(w Word) (Instruction, error) {
 		is.init()
 	}
 
-	upper6, middle6, opCode := splitOpWord(w)
+	upper6, middle6, lower4 := splitOpWord(w)
 
-	if opCode != 0 {
+	if lower4 != 0 {
 		// Binary instruction.
-		if int(opCode) >= len(is.binarySet) {
-			// Shouldn't happen with the given set.
-			return nil, InvalidBinaryOpCodeError(opCode)
+		instruction, a, b, err := is.binaryInstruction(upper6, middle6, lower4)
+		if err != nil {
+			return nil, err
 		}
-		instruction := is.binarySet[opCode]
-		if instruction == nil {
-			// Shouldn't happen with the given set.
-			return nil, InvalidBinaryOpCodeError(opCode)
-		}
-		a := ValueFromWord(middle6)
-		b := ValueFromWord(upper6)
 		instruction.SetBinaryValue(a, b)
 		return instruction, nil
 	}
 
 	// Unary instruction.
-	uniOpCode := middle6
-	if int(uniOpCode) >= len(is.unarySet) {
-		return nil, InvalidUnaryOpCodeError(uniOpCode)
+	instruction, a, err := is.unaryInstruction(upper6, middle6)
+	if err != nil {
+		return nil, err
 	}
-	instruction := is.unarySet[uniOpCode]
-	if instruction == nil {
-		return nil, InvalidUnaryOpCodeError(uniOpCode)
-	}
-	a := ValueFromWord(upper6)
 	instruction.SetUnaryValue(a)
 	return instruction, nil
 }

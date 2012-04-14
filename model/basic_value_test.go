@@ -31,12 +31,19 @@ func TestNoValueString(t *testing.T) {
 		{"0x1f", 0x3f, false, 0},
 	}
 
+	var valueSet BasicValueSet
+
 	for _, test := range tests {
 		wordLoader := &FakeWordLoader{t: t}
 		if test.HasNextWord {
 			wordLoader.Words = []Word{test.NextWord}
 		}
-		value := ValueFromWord(test.ValueWord)
+		value, err := valueSet.Value(test.ValueWord)
+		if err != nil {
+			t.Errorf("Unexpected error for value code %02x: %v",
+				test.ValueWord, err)
+			continue
+		}
 		value.LoadInstValue(wordLoader)
 		if !wordLoader.exhausted() {
 			t.Errorf("Value %v (%02x) did not consume next word",
