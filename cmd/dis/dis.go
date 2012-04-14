@@ -9,7 +9,7 @@ import (
 	"log"
 	"os"
 
-	"model"
+	"github.com/huin/dcpu16go/model"
 )
 
 var (

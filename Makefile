@@ -1,4 +1,4 @@
-all: dis
+all: bin/dis
 
 examples: \
     examples/test.bin \
@@ -10,8 +10,8 @@ test:
 fmt:
 	@go fmt ./...
 
-dis:
-	@go build dis
+bin/dis:
+	@go build -o bin/dis cmd/dis/*.go
 
 %.bin: %.hex
 	xxd -r $< $@
