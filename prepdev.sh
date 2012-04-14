@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 function CreateSelfRef() {
     selfsrc='src/github.com/huin/dcpu16go'
