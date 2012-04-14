@@ -1,5 +1,9 @@
 all: bin/dis
 
+clean:
+	rm -f examples/test.{bin,dasm16}
+	rm -f bin/dis
+
 examples: \
     examples/test.bin \
     examples/test.dasm16
@@ -17,6 +21,6 @@ bin/dis:
 	xxd -r $< $@
 
 %.dasm16: %.bin
-	"./dis" $< $@
+	bin/dis $< $@
 
-.PHONY: all examples fmt test
+.PHONY: all clean examples fmt test

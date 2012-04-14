@@ -1,3 +1,5 @@
-/dis
+/bin
+/pkg
+/src
 /examples/test.dasm16
 *.bin
