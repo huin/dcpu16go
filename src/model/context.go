@@ -1,7 +1,7 @@
 package model
 
 type WordLoader interface {
-	WordLoad() Word
+	WordLoad() (Word, error)
 }
 
 type CPU interface {
@@ -50,6 +50,6 @@ func (state *BasicMachineState) Init() {
 	state.BasicCPU.Init()
 }
 
-func (state *BasicMachineState) WordLoad() Word {
-	return state.BasicMemoryState.ReadMemory(state.ReadIncPC())
+func (state *BasicMachineState) WordLoad() (Word, error) {
+	return state.BasicMemoryState.ReadMemory(state.ReadIncPC()), nil
 }

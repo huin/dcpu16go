@@ -5,27 +5,41 @@ import (
 )
 
 type Operation interface {
-	LoadNextWords(WordLoader)
+	LoadNextWords(WordLoader) error
 	Execute(MachineState) error // TODO Return ticks.
 	String() string
 }
 
 func OperationSkip(wordLoader WordLoader) error {
 	// TODO Efficient version that doesn't hit memory?
-	op, err := operationFromWord(wordLoader.WordLoad())
+	word, err := wordLoader.WordLoad()
 	if err != nil {
 		return err
 	}
-	op.LoadNextWords(wordLoader)
+	op, err := operationFromWord(word)
+	if err != nil {
+		return err
+	}
+	err = op.LoadNextWords(wordLoader)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func OperationLoad(wordLoader WordLoader) (Operation, error) {
-	op, err := operationFromWord(wordLoader.WordLoad())
+	word, err := wordLoader.WordLoad()
 	if err != nil {
 		return nil, err
 	}
-	op.LoadNextWords(wordLoader)
+	op, err := operationFromWord(word)
+	if err != nil {
+		return nil, err
+	}
+	err = op.LoadNextWords(wordLoader)
+	if err != nil {
+		return nil, err
+	}
 	return op, err
 }
 
@@ -86,8 +100,8 @@ type unaryOp struct {
 	A Value
 }
 
-func (o *unaryOp) LoadNextWords(wordLoader WordLoader) {
-	o.A.LoadOpValue(wordLoader)
+func (o *unaryOp) LoadNextWords(wordLoader WordLoader) error {
+	return o.A.LoadOpValue(wordLoader)
 }
 
 func (o *unaryOp) format(name string) string {
@@ -115,9 +129,12 @@ type binaryOp struct {
 	A, B Value
 }
 
-func (o *binaryOp) LoadNextWords(wordLoader WordLoader) {
-	o.A.LoadOpValue(wordLoader)
-	o.B.LoadOpValue(wordLoader)
+func (o *binaryOp) LoadNextWords(wordLoader WordLoader) error {
+	err := o.A.LoadOpValue(wordLoader)
+	if err != nil {
+		return err
+	}
+	return o.B.LoadOpValue(wordLoader)
 }
 
 func (o *binaryOp) format(name string) string {

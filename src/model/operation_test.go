@@ -10,13 +10,13 @@ type FakeWordLoader struct {
 	Loc   int
 }
 
-func (l *FakeWordLoader) WordLoad() Word {
+func (l *FakeWordLoader) WordLoad() (Word, error) {
 	if l.Loc >= len(l.Words) {
 		l.t.Fatalf("exceeded bounds on %#v", *l)
 	}
 	w := l.Words[l.Loc]
 	l.Loc++
-	return w
+	return w, nil
 }
 
 func (l *FakeWordLoader) exhausted() bool {
