@@ -42,3 +42,31 @@ type BinaryInstruction interface {
 	Instruction
 	SetBinaryValue(Value, Value)
 }
+
+func InstructionSkip(wordLoader WordLoader, set InstructionSet) error {
+	word, err := wordLoader.WordLoad()
+	if err != nil {
+		return err
+	}
+	count, err := set.NumExtraWords(word)
+	if err != nil {
+		return err
+	}
+	return wordLoader.SkipWords(count)
+}
+
+func InstructionLoad(wordLoader WordLoader, set InstructionSet) (Instruction, error) {
+	word, err := wordLoader.WordLoad()
+	if err != nil {
+		return nil, err
+	}
+	instruction, err := set.Instruction(word)
+	if err != nil {
+		return nil, err
+	}
+	err = instruction.LoadNextWords(wordLoader)
+	if err != nil {
+		return nil, err
+	}
+	return instruction, err
+}
