@@ -6,7 +6,8 @@ import (
 
 // D16ValueSet is the table of basic values supported by the DCPU-16. This
 // implementation avoids memory allocation, but the instruction returned is
-// only good for use until the next call to the Value method.
+// only good for use until the next call to the Value method. Use Value.Clone
+// if the value is needed later.
 type D16ValueSet struct {
 	registerValue           RegisterValue
 	registerAddressValue    RegisterAddressValue
@@ -91,6 +92,11 @@ func (v *RegisterValue) Read(state MachineState) Word {
 	return state.Register(v.Reg)
 }
 
+func (v *RegisterValue) Clone() Value {
+	c := *v
+	return &c
+}
+
 func (v *RegisterValue) String() string {
 	return v.Reg.String()
 }
@@ -107,6 +113,10 @@ func (v *RegisterAddressValue) Write(state MachineState, word Word) {
 
 func (v *RegisterAddressValue) Read(state MachineState) Word {
 	return state.ReadMemory(state.Register(v.Reg))
+}
+
+func (v *RegisterAddressValue) Clone() Value {
+	return &RegisterAddressValue{Reg: v.Reg}
 }
 
 func (v *RegisterAddressValue) String() string {
@@ -127,6 +137,11 @@ func (v *RegisterRelAddressValue) Read(state MachineState) Word {
 	return state.ReadMemory(state.Register(v.Reg) + v.Value)
 }
 
+func (v *RegisterRelAddressValue) Clone() Value {
+	c := *v
+	return &c
+}
+
 func (v *RegisterRelAddressValue) String() string {
 	return fmt.Sprintf("[0x%04x+%v]", v.Value, v.Reg)
 }
@@ -142,6 +157,10 @@ func (v PopValue) Write(state MachineState, word Word) {
 
 func (v PopValue) Read(state MachineState) Word {
 	return state.ReadMemory(state.ReadIncSP())
+}
+
+func (v PopValue) Clone() Value {
+	return v
 }
 
 func (v PopValue) String() string {
@@ -161,6 +180,10 @@ func (v PeekValue) Read(state MachineState) Word {
 	return state.ReadMemory(state.SP())
 }
 
+func (v PeekValue) Clone() Value {
+	return v
+}
+
 func (v PeekValue) String() string {
 	return "PEEK"
 }
@@ -176,6 +199,10 @@ func (v PushValue) Write(state MachineState, word Word) {
 
 func (v PushValue) Read(state MachineState) Word {
 	return state.ReadMemory(state.DecReadSP())
+}
+
+func (v PushValue) Clone() Value {
+	return v
 }
 
 func (v PushValue) String() string {
@@ -195,6 +222,10 @@ func (v SpValue) Read(state MachineState) Word {
 	return state.SP()
 }
 
+func (v SpValue) Clone() Value {
+	return v
+}
+
 func (v SpValue) String() string {
 	return "SP"
 }
@@ -210,6 +241,10 @@ func (v PcValue) Write(state MachineState, word Word) {
 
 func (v PcValue) Read(state MachineState) Word {
 	return state.PC()
+}
+
+func (v PcValue) Clone() Value {
+	return v
 }
 
 func (v PcValue) String() string {
@@ -229,6 +264,10 @@ func (v OValue) Read(state MachineState) Word {
 	return state.O()
 }
 
+func (v OValue) Clone() Value {
+	return v
+}
+
 func (v OValue) String() string {
 	return "O"
 }
@@ -244,6 +283,11 @@ func (v *AddressValue) Write(state MachineState, word Word) {
 
 func (v *AddressValue) Read(state MachineState) Word {
 	return state.ReadMemory(v.extraWord.Value)
+}
+
+func (v *AddressValue) Clone() Value {
+	c := *v
+	return &c
 }
 
 func (v *AddressValue) String() string {
@@ -263,6 +307,11 @@ func (v *WordValue) Read(state MachineState) Word {
 	return v.extraWord.Value
 }
 
+func (v *WordValue) Clone() Value {
+	c := *v
+	return &c
+}
+
 func (v *WordValue) String() string {
 	return fmt.Sprintf("0x%04x", v.Value)
 }
@@ -279,6 +328,11 @@ func (v *LiteralValue) Write(state MachineState, word Word) {
 
 func (v *LiteralValue) Read(state MachineState) Word {
 	return v.Literal
+}
+
+func (v *LiteralValue) Clone() Value {
+	c := *v
+	return &c
 }
 
 func (v *LiteralValue) String() string {

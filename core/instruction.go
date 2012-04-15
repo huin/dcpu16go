@@ -19,6 +19,8 @@ func (err InvalidBinaryOpCodeError) Error() string {
 type Instruction interface {
 	LoadNextWords(WordLoader) error
 	Execute(MachineState) error // TODO Return ticks.
+	// Create a copy of the instruction.
+	Clone() Instruction
 	String() string
 }
 

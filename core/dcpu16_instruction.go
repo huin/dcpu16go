@@ -14,6 +14,7 @@ func splitOpWord(w Word) (upper6, middle6, lower4 Word) {
 // D16InstructionSet is the table of basic instructions supported by the
 // DCPU-16. This implementation avoids memory allocation, but the instruction
 // returned is only good for use until the next call to the Instruction method.
+// Use Instruction.Clone if the value is needed later.
 type D16InstructionSet struct {
 	initialized bool
 	jsrInst     JsrInst
@@ -147,6 +148,10 @@ func (o *unaryInst) LoadNextWords(wordLoader WordLoader) error {
 	return o.A.LoadInstValue(wordLoader)
 }
 
+func (o *unaryInst) clone() unaryInst {
+	return unaryInst{A: o.A.Clone()}
+}
+
 func (o *unaryInst) format(name string) string {
 	return fmt.Sprintf("%s %v", name, o.A)
 }
@@ -160,6 +165,10 @@ func (o *JsrInst) Execute(state MachineState) error {
 	state.WriteMemory(state.DecReadSP(), state.PC())
 	state.WritePC(o.A.Read(state))
 	return nil
+}
+
+func (o *JsrInst) Clone() Instruction {
+	return &JsrInst{o.unaryInst.clone()}
 }
 
 func (o *JsrInst) String() string {
@@ -185,6 +194,10 @@ func (o *binaryInst) LoadNextWords(wordLoader WordLoader) error {
 	return o.B.LoadInstValue(wordLoader)
 }
 
+func (o *binaryInst) clone() binaryInst {
+	return binaryInst{A: o.A.Clone(), B: o.B.Clone()}
+}
+
 func (o *binaryInst) format(name string) string {
 	return fmt.Sprintf("%s %v, %v", name, o.A, o.B)
 }
@@ -197,6 +210,10 @@ type SetInst struct {
 func (o *SetInst) Execute(state MachineState) error {
 	o.A.Write(state, o.B.Read(state))
 	return nil
+}
+
+func (o *SetInst) Clone() Instruction {
+	return &SetInst{o.binaryInst.clone()}
 }
 
 func (o *SetInst) String() string {
@@ -216,6 +233,10 @@ func (o *AddInst) Execute(state MachineState) error {
 	return nil
 }
 
+func (o *AddInst) Clone() Instruction {
+	return &AddInst{o.binaryInst.clone()}
+}
+
 func (o *AddInst) String() string {
 	return o.binaryInst.format("ADD")
 }
@@ -231,6 +252,10 @@ func (o *SubInst) Execute(state MachineState) error {
 	o.A.Write(state, Word(result&0xffff))
 	state.WriteO(Word(result >> 16))
 	return nil
+}
+
+func (o *SubInst) Clone() Instruction {
+	return &SubInst{o.binaryInst.clone()}
 }
 
 func (o *SubInst) String() string {
@@ -250,6 +275,10 @@ func (o *MulInst) Execute(state MachineState) error {
 	return nil
 }
 
+func (o *MulInst) Clone() Instruction {
+	return &MulInst{o.binaryInst.clone()}
+}
+
 func (o *MulInst) String() string {
 	return o.binaryInst.format("MUL")
 }
@@ -267,6 +296,10 @@ func (o *DivInst) Execute(state MachineState) error {
 	return nil
 }
 
+func (o *DivInst) Clone() Instruction {
+	return &DivInst{o.binaryInst.clone()}
+}
+
 func (o *DivInst) String() string {
 	return o.binaryInst.format("DIV")
 }
@@ -280,6 +313,10 @@ func (o *ModInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
 	o.A.Write(state, a%b)
 	return nil
+}
+
+func (o *ModInst) Clone() Instruction {
+	return &ModInst{o.binaryInst.clone()}
 }
 
 func (o *ModInst) String() string {
@@ -299,6 +336,10 @@ func (o *ShlInst) Execute(state MachineState) error {
 	return nil
 }
 
+func (o *ShlInst) Clone() Instruction {
+	return &ShlInst{o.binaryInst.clone()}
+}
+
 func (o *ShlInst) String() string {
 	return o.binaryInst.format("SHL")
 }
@@ -316,6 +357,10 @@ func (o *ShrInst) Execute(state MachineState) error {
 	return nil
 }
 
+func (o *ShrInst) Clone() Instruction {
+	return &ShrInst{o.binaryInst.clone()}
+}
+
 func (o *ShrInst) String() string {
 	return o.binaryInst.format("SHR")
 }
@@ -329,6 +374,10 @@ func (o *AndInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
 	o.A.Write(state, a&b)
 	return nil
+}
+
+func (o *AndInst) Clone() Instruction {
+	return &AndInst{o.binaryInst.clone()}
 }
 
 func (o *AndInst) String() string {
@@ -346,6 +395,10 @@ func (o *BorInst) Execute(state MachineState) error {
 	return nil
 }
 
+func (o *BorInst) Clone() Instruction {
+	return &BorInst{o.binaryInst.clone()}
+}
+
 func (o *BorInst) String() string {
 	return o.binaryInst.format("BOR")
 }
@@ -359,6 +412,10 @@ func (o *XorInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
 	o.A.Write(state, a^b)
 	return nil
+}
+
+func (o *XorInst) Clone() Instruction {
+	return &XorInst{o.binaryInst.clone()}
 }
 
 func (o *XorInst) String() string {
@@ -378,6 +435,10 @@ func (o *IfeInst) Execute(state MachineState) error {
 	return InstructionSkip(state, state)
 }
 
+func (o *IfeInst) Clone() Instruction {
+	return &IfeInst{o.binaryInst.clone()}
+}
+
 func (o *IfeInst) String() string {
 	return o.binaryInst.format("IFE")
 }
@@ -393,6 +454,10 @@ func (o *IfnInst) Execute(state MachineState) error {
 		return nil
 	}
 	return InstructionSkip(state, state)
+}
+
+func (o *IfnInst) Clone() Instruction {
+	return &IfnInst{o.binaryInst.clone()}
 }
 
 func (o *IfnInst) String() string {
@@ -412,6 +477,10 @@ func (o *IfgInst) Execute(state MachineState) error {
 	return InstructionSkip(state, state)
 }
 
+func (o *IfgInst) Clone() Instruction {
+	return &IfgInst{o.binaryInst.clone()}
+}
+
 func (o *IfgInst) String() string {
 	return o.binaryInst.format("IFG")
 }
@@ -427,6 +496,10 @@ func (o *IfbInst) Execute(state MachineState) error {
 		return InstructionSkip(state, state)
 	}
 	return nil
+}
+
+func (o *IfbInst) Clone() Instruction {
+	return &IfbInst{o.binaryInst.clone()}
 }
 
 func (o *IfbInst) String() string {

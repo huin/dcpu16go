@@ -13,6 +13,8 @@ type Value interface {
 	Read(MachineState) Word
 	LoadInstValue(WordLoader) error
 	NumExtraWords() Word
+	// Create a copy of the value.
+	Clone() Value
 	String() string
 }
 
