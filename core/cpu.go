@@ -1,4 +1,4 @@
-package model
+package core
 
 type D16CPU struct {
 	registers [8]Word // registers A-J, index with RegisterId.

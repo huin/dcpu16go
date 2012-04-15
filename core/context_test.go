@@ -1,3 +1,3 @@
-package model
+package core
 
 var basicMachineStateImplTest MachineState = &D16MachineState{}

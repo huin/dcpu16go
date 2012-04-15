@@ -23,13 +23,13 @@ type ReaderWordLoader struct {
 	Reader    io.Reader
 }
 
-func (r *ReaderWordLoader) WordLoad() (model.Word, error) {
-	var word model.Word
+func (r *ReaderWordLoader) WordLoad() (core.Word, error) {
+	var word core.Word
 	err := binary.Read(r.Reader, r.ByteOrder, &word)
 	return word, err
 }
 
-func (r *ReaderWordLoader) SkipWords(model.Word) error {
+func (r *ReaderWordLoader) SkipWords(core.Word) error {
 	// Shouldn't be required here.
 	panic("unexpected ReaderWordLoader SkipWords call")
 }
@@ -60,10 +60,10 @@ func main() {
 	}
 	defer outfile.Close()
 
-	var instructionSet model.D16InstructionSet
+	var instructionSet core.D16InstructionSet
 
 	for {
-		instruction, err := model.InstructionLoad(wordLoader, &instructionSet)
+		instruction, err := core.InstructionLoad(wordLoader, &instructionSet)
 		if err != nil {
 			if err == io.EOF {
 				break

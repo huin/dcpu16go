@@ -1,4 +1,4 @@
-package model
+package core
 
 const MemorySize = 0x10000
 

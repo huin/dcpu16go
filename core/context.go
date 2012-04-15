@@ -1,4 +1,4 @@
-package model
+package core
 
 type WordLoader interface {
 	WordLoad() (Word, error)

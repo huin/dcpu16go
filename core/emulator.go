@@ -1,4 +1,4 @@
-package model
+package core
 
 func Step(state MachineState) error {
 	instruction, err := InstructionLoad(state, state)
