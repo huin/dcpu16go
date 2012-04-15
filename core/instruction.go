@@ -22,6 +22,16 @@ type Instruction interface {
 	String() string
 }
 
+type UnaryInstruction interface {
+	Instruction
+	SetUnaryValue(Value)
+}
+
+type BinaryInstruction interface {
+	Instruction
+	SetBinaryValue(Value, Value)
+}
+
 type InstructionSet interface {
 	// Instruction returns the instruction for the given word. The returned
 	// Instruction must have LoadNextWords called on it before it will function
@@ -31,16 +41,6 @@ type InstructionSet interface {
 	// NumExtraWords returns the number of extra words required to be read for
 	// the given instruction.
 	NumExtraWords(word Word) (Word, error)
-}
-
-type UnaryInstruction interface {
-	Instruction
-	SetUnaryValue(Value)
-}
-
-type BinaryInstruction interface {
-	Instruction
-	SetBinaryValue(Value, Value)
 }
 
 func InstructionSkip(wordLoader WordLoader, set InstructionSet) error {
