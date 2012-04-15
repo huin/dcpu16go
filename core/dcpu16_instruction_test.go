@@ -146,9 +146,19 @@ func TestInstructionExecute(t *testing.T) {
 			4, 0,
 		},
 		{
+			"DIV 12 / 3 = 4",
+			12, &DivInst{binInstValue(3)},
+			4, 0,
+		},
+		{
 			"DIV 0x1234 / 0x0100 = 0x0012, with carry=0x3400",
 			0x1234, &DivInst{binInstValue(0x0100)},
 			0x0012, 0x3400,
+		},
+		{
+			"DIV 5 / 0 = 0, with carry=0",
+			5, &DivInst{binInstValue(0)},
+			0, 0,
 		},
 		// ModInst
 		{
@@ -160,6 +170,11 @@ func TestInstructionExecute(t *testing.T) {
 			"MOD 0x1234 % 0x0100 = 0x0034, with carry=0x0000",
 			0x1234, &ModInst{binInstValue(0x0100)},
 			0x0034, 0x0000,
+		},
+		{
+			"MOD 5 % 0 = 0",
+			5, &ModInst{binInstValue(0)},
+			0, 0,
 		},
 		// ShlInst
 		{

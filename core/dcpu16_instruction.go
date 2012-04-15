@@ -290,9 +290,14 @@ type DivInst struct {
 
 func (o *DivInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	result := (uint32(a) << 16) / uint32(b)
-	o.A.Write(state, Word(result>>16))
-	state.WriteO(Word(result & 0xffff))
+	if b == 0 {
+		o.A.Write(state, 0)
+		state.WriteO(0)
+	} else {
+		result := (uint32(a) << 16) / uint32(b)
+		o.A.Write(state, Word(result>>16))
+		state.WriteO(Word(result & 0xffff))
+	}
 	return nil
 }
 
@@ -311,7 +316,11 @@ type ModInst struct {
 
 func (o *ModInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	o.A.Write(state, a%b)
+	if b == 0 {
+		o.A.Write(state, 0)
+	} else {
+		o.A.Write(state, a%b)
+	}
 	return nil
 }
 
