@@ -43,21 +43,21 @@ type MachineState interface {
 	Memory
 }
 
-type BasicMachineState struct {
-	BasicInstructionSet
-	BasicCPU
-	BasicMemoryState
+type D16MachineState struct {
+	D16InstructionSet
+	D16CPU
+	D16MemoryState
 }
 
-func (state *BasicMachineState) Init() {
-	state.BasicCPU.Init()
+func (state *D16MachineState) Init() {
+	state.D16CPU.Init()
 }
 
-func (state *BasicMachineState) WordLoad() (Word, error) {
-	return state.BasicMemoryState.ReadMemory(state.ReadIncPC()), nil
+func (state *D16MachineState) WordLoad() (Word, error) {
+	return state.D16MemoryState.ReadMemory(state.ReadIncPC()), nil
 }
 
-func (state *BasicMachineState) SkipWords(count Word) error {
+func (state *D16MachineState) SkipWords(count Word) error {
 	state.WritePC(state.PC() + count)
 	return nil
 }

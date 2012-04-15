@@ -31,7 +31,7 @@ func TestNoValueString(t *testing.T) {
 		{"0x1f", 0x3f, false, 0},
 	}
 
-	var valueSet BasicValueSet
+	var valueSet D16ValueSet
 
 	for _, test := range tests {
 		wordLoader := &FakeWordLoader{t: t}
@@ -60,71 +60,71 @@ func TestNoValueString(t *testing.T) {
 func TestValueWrite(t *testing.T) {
 	type Test struct {
 		Value     Value
-		InitCPU   BasicCPU
+		InitCPU   D16CPU
 		WriteWord Word
 		ExpStates []StateChecker
-		ExpCPU    BasicCPU
+		ExpCPU    D16CPU
 	}
 
 	tests := []Test{
 		{
 			Value:     &RegisterAddressValue{Reg: RegA},
-			InitCPU:   BasicCPU{registers: [8]Word{0x1234}},
+			InitCPU:   D16CPU{registers: [8]Word{0x1234}},
 			WriteWord: 0x5678,
 			ExpStates: []StateChecker{
 				&ExpMem{0x1234, []Word{0x5678}},
 			},
-			ExpCPU: BasicCPU{registers: [8]Word{0x1234}},
+			ExpCPU: D16CPU{registers: [8]Word{0x1234}},
 		},
 		{
 			Value:     &RegisterRelAddressValue{extraWord{5}, RegA},
-			InitCPU:   BasicCPU{registers: [8]Word{0x1234}},
+			InitCPU:   D16CPU{registers: [8]Word{0x1234}},
 			WriteWord: 0x5678,
 			ExpStates: []StateChecker{
 				&ExpMem{0x1239, []Word{0x5678}},
 			},
-			ExpCPU: BasicCPU{registers: [8]Word{0x1234}},
+			ExpCPU: D16CPU{registers: [8]Word{0x1234}},
 		},
 		{
 			Value:     PopValue{},
-			InitCPU:   BasicCPU{sp: 0xfffe},
+			InitCPU:   D16CPU{sp: 0xfffe},
 			WriteWord: 0x5678,
 			ExpStates: []StateChecker{
 				&ExpMem{0xfffe, []Word{0x5678, 0x0000}},
 			},
-			ExpCPU: BasicCPU{sp: 0xffff},
+			ExpCPU: D16CPU{sp: 0xffff},
 		},
 		{
 			Value:     PeekValue{},
-			InitCPU:   BasicCPU{sp: 0xfffe},
+			InitCPU:   D16CPU{sp: 0xfffe},
 			WriteWord: 0x5678,
 			ExpStates: []StateChecker{
 				&ExpMem{0xfffe, []Word{0x5678, 0x0000}},
 			},
-			ExpCPU: BasicCPU{sp: 0xfffe},
+			ExpCPU: D16CPU{sp: 0xfffe},
 		},
 		{
 			Value:     PushValue{},
-			InitCPU:   BasicCPU{sp: 0xffff},
+			InitCPU:   D16CPU{sp: 0xffff},
 			WriteWord: 0x5678,
 			ExpStates: []StateChecker{
 				&ExpMem{0xfffe, []Word{0x5678, 0x0000}},
 			},
-			ExpCPU: BasicCPU{sp: 0xfffe},
+			ExpCPU: D16CPU{sp: 0xfffe},
 		},
 	}
 
 	for _, test := range tests {
-		var state BasicMachineState
+		var state D16MachineState
 		state.Init()
-		state.BasicCPU = test.InitCPU
+		state.D16CPU = test.InitCPU
 		test.Value.Write(&state, test.WriteWord)
 		name := fmt.Sprintf("%v write 0x%04x", test.Value, test.WriteWord)
 		for _, expState := range test.ExpStates {
 			expState.StateCheck(t, name, &state)
 		}
-		if !CPUEquals(&test.ExpCPU, &state.BasicCPU) {
-			t.Errorf("%v\ngot CPU state %#v\n     expected %#v", test.Value, state.BasicCPU, test.ExpCPU)
+		if !CPUEquals(&test.ExpCPU, &state.D16CPU) {
+			t.Errorf("%v\ngot CPU state %#v\n     expected %#v", test.Value, state.D16CPU, test.ExpCPU)
 		}
 	}
 }
@@ -132,67 +132,67 @@ func TestValueWrite(t *testing.T) {
 func TestValueRead(t *testing.T) {
 	type Test struct {
 		Value         Value
-		InitCPU       BasicCPU
+		InitCPU       D16CPU
 		InitMemOffset Word
 		InitMem       []Word
 		ExpRead       Word
-		ExpCPU        BasicCPU
+		ExpCPU        D16CPU
 	}
 
 	tests := []Test{
 		{
 			Value:         &RegisterAddressValue{Reg: RegA},
-			InitCPU:       BasicCPU{registers: [8]Word{0x1234}},
+			InitCPU:       D16CPU{registers: [8]Word{0x1234}},
 			InitMemOffset: 0x1234,
 			InitMem:       []Word{0x5678},
 			ExpRead:       0x5678,
-			ExpCPU:        BasicCPU{registers: [8]Word{0x1234}},
+			ExpCPU:        D16CPU{registers: [8]Word{0x1234}},
 		},
 		{
 			Value:         &RegisterRelAddressValue{extraWord{5}, RegA},
-			InitCPU:       BasicCPU{registers: [8]Word{0x1234}},
+			InitCPU:       D16CPU{registers: [8]Word{0x1234}},
 			InitMemOffset: 0x1239,
 			InitMem:       []Word{0x5678},
 			ExpRead:       0x5678,
-			ExpCPU:        BasicCPU{registers: [8]Word{0x1234}},
+			ExpCPU:        D16CPU{registers: [8]Word{0x1234}},
 		},
 		{
 			Value:         PopValue{},
-			InitCPU:       BasicCPU{sp: 0xfffe},
+			InitCPU:       D16CPU{sp: 0xfffe},
 			InitMemOffset: 0xfffe,
 			InitMem:       []Word{0x5678, 0x0000},
 			ExpRead:       0x5678,
-			ExpCPU:        BasicCPU{sp: 0xffff},
+			ExpCPU:        D16CPU{sp: 0xffff},
 		},
 		{
 			Value:         PeekValue{},
-			InitCPU:       BasicCPU{sp: 0xfffe},
+			InitCPU:       D16CPU{sp: 0xfffe},
 			InitMemOffset: 0xfffe,
 			InitMem:       []Word{0x5678, 0x0000},
 			ExpRead:       0x5678,
-			ExpCPU:        BasicCPU{sp: 0xfffe},
+			ExpCPU:        D16CPU{sp: 0xfffe},
 		},
 		{
 			Value:         PushValue{},
-			InitCPU:       BasicCPU{sp: 0xffff},
+			InitCPU:       D16CPU{sp: 0xffff},
 			InitMemOffset: 0xfffe,
 			InitMem:       []Word{0x5678, 0x0000},
 			ExpRead:       0x5678,
-			ExpCPU:        BasicCPU{sp: 0xfffe},
+			ExpCPU:        D16CPU{sp: 0xfffe},
 		},
 	}
 
 	for _, test := range tests {
-		var state BasicMachineState
+		var state D16MachineState
 		state.Init()
-		copy(state.BasicMemoryState.Data[test.InitMemOffset:], test.InitMem)
-		state.BasicCPU = test.InitCPU
+		copy(state.D16MemoryState.Data[test.InitMemOffset:], test.InitMem)
+		state.D16CPU = test.InitCPU
 		result := test.Value.Read(&state)
 		if test.ExpRead != result {
 			t.Errorf("%v returned 0x%04x, expected 0x%04x", test.Value, result, test.ExpRead)
 		}
-		if !CPUEquals(&test.ExpCPU, &state.BasicCPU) {
-			t.Errorf("%v\ngot CPU state %#v\n     expected %#v", test.Value, state.BasicCPU, test.ExpCPU)
+		if !CPUEquals(&test.ExpCPU, &state.D16CPU) {
+			t.Errorf("%v\ngot CPU state %#v\n     expected %#v", test.Value, state.D16CPU, test.ExpCPU)
 		}
 	}
 }

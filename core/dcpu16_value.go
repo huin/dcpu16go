@@ -4,10 +4,10 @@ import (
 	"fmt"
 )
 
-// BasicValueSet is the table of basic values supported by the DCPU-16. This
+// D16ValueSet is the table of basic values supported by the DCPU-16. This
 // implementation avoids memory allocation, but the instruction returned is
 // only good for use until the next call to the Value method.
-type BasicValueSet struct {
+type D16ValueSet struct {
 	registerValue           RegisterValue
 	registerAddressValue    RegisterAddressValue
 	registerRelAddressValue RegisterRelAddressValue
@@ -16,7 +16,7 @@ type BasicValueSet struct {
 	literalValue            LiteralValue
 }
 
-func (vs *BasicValueSet) Value(w Word) (Value, error) {
+func (vs *D16ValueSet) Value(w Word) (Value, error) {
 	var value Value
 	switch {
 	case 0x00 <= w && w <= 0x07:

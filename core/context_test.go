@@ -1,3 +1,3 @@
 package model
 
-var basicMachineStateImplTest MachineState = &BasicMachineState{}
+var basicMachineStateImplTest MachineState = &D16MachineState{}

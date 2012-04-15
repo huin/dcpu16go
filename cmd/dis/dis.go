@@ -60,7 +60,7 @@ func main() {
 	}
 	defer outfile.Close()
 
-	var instructionSet model.BasicInstructionSet
+	var instructionSet model.D16InstructionSet
 
 	for {
 		instruction, err := model.InstructionLoad(wordLoader, &instructionSet)

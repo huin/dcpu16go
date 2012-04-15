@@ -1,3 +1,3 @@
 package model
 
-var cpuStateImplTest CPU = &BasicCPU{}
+var cpuStateImplTest CPU = &D16CPU{}

@@ -9,7 +9,7 @@ type ExpMem struct {
 	Expected []Word
 }
 
-func (exp *ExpMem) StateCheck(t *testing.T, testName string, mem *BasicMachineState) bool {
+func (exp *ExpMem) StateCheck(t *testing.T, testName string, mem *D16MachineState) bool {
 	for i := range exp.Expected {
 		if exp.Expected[i] != mem.Data[exp.Offset+i] {
 			t.Errorf("%s: memory state at 0x%04x", testName, exp.Offset+i)
@@ -22,7 +22,7 @@ func (exp *ExpMem) StateCheck(t *testing.T, testName string, mem *BasicMachineSt
 }
 
 type StateChecker interface {
-	StateCheck(t *testing.T, testName string, state *BasicMachineState) bool
+	StateCheck(t *testing.T, testName string, state *D16MachineState) bool
 }
 
 type ErrState struct {
@@ -30,7 +30,7 @@ type ErrState struct {
 	NumSteps int
 }
 
-func (exp *ErrState) StateCheck(t *testing.T, testName string, state *BasicMachineState) bool {
+func (exp *ErrState) StateCheck(t *testing.T, testName string, state *D16MachineState) bool {
 	testName = testName + "::" + exp.Name
 	for i := 0; i < (exp.NumSteps - 1); i++ {
 		err := Step(state)
@@ -48,11 +48,11 @@ func (exp *ErrState) StateCheck(t *testing.T, testName string, state *BasicMachi
 type ExpState struct {
 	Name     string
 	NumSteps int
-	CPU      BasicCPU
+	CPU      D16CPU
 	Mems     []ExpMem
 }
 
-func (exp *ExpState) StateCheck(t *testing.T, testName string, state *BasicMachineState) bool {
+func (exp *ExpState) StateCheck(t *testing.T, testName string, state *D16MachineState) bool {
 	testName = testName + "::" + exp.Name
 
 	for i := 0; i < exp.NumSteps; i++ {
@@ -62,10 +62,10 @@ func (exp *ExpState) StateCheck(t *testing.T, testName string, state *BasicMachi
 		}
 	}
 
-	if !CPUEquals(&exp.CPU, &state.BasicCPU) {
+	if !CPUEquals(&exp.CPU, &state.D16CPU) {
 		t.Errorf("%s: CPU state", testName)
 		t.Errorf("expected: %#v", exp.CPU)
-		t.Errorf("got:      %#v", state.BasicCPU)
+		t.Errorf("got:      %#v", state.D16CPU)
 		return false
 	}
 
@@ -92,7 +92,7 @@ func TestStep(t *testing.T) {
 			ExpStates: []StateChecker{
 				&ExpState{
 					NumSteps: 1,
-					CPU:      BasicCPU{registers: [8]Word{0x0030, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0002, sp: 0xffff},
+					CPU:      D16CPU{registers: [8]Word{0x0030, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0002, sp: 0xffff},
 					Mems:     []ExpMem{{0x0001, []Word{0x0030}}},
 				},
 			},
@@ -103,7 +103,7 @@ func TestStep(t *testing.T) {
 			ExpStates: []StateChecker{
 				&ExpState{
 					NumSteps: 1,
-					CPU:      BasicCPU{registers: [8]Word{0, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0003, sp: 0xffff},
+					CPU:      D16CPU{registers: [8]Word{0, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0003, sp: 0xffff},
 					Mems:     []ExpMem{{0x0003, []Word{0xbeef}}},
 				},
 			},
@@ -119,7 +119,7 @@ func TestStep(t *testing.T) {
 			ExpStates: []StateChecker{
 				&ExpState{
 					NumSteps: 4,
-					CPU:      BasicCPU{registers: [8]Word{0x0030, 0x0030, 0x0030, 0, 0, 0, 0, 0}, pc: 0x0005, sp: 0xffff},
+					CPU:      D16CPU{registers: [8]Word{0x0030, 0x0030, 0x0030, 0, 0, 0, 0, 0}, pc: 0x0005, sp: 0xffff},
 					Mems:     []ExpMem{{0xfffe, []Word{0x0030, 0x0000}}},
 				},
 			},
@@ -139,7 +139,7 @@ func TestStep(t *testing.T) {
 				&ExpState{
 					Name:     "state check",
 					NumSteps: 0,
-					CPU:      BasicCPU{pc: 0x0002, sp: 0xffff},
+					CPU:      D16CPU{pc: 0x0002, sp: 0xffff},
 				},
 			},
 		},
@@ -176,7 +176,7 @@ func TestStep(t *testing.T) {
 				&ExpState{
 					Name:     "after basic stuff",
 					NumSteps: 4,
-					CPU:      BasicCPU{registers: [8]Word{0x0010}, pc: 0x000a, sp: 0xffff, o: 0x0000},
+					CPU:      D16CPU{registers: [8]Word{0x0010}, pc: 0x000a, sp: 0xffff, o: 0x0000},
 					Mems: []ExpMem{
 						{0x1000, []Word{0x0020}},
 					},
@@ -184,12 +184,12 @@ func TestStep(t *testing.T) {
 				&ExpState{
 					Name:     "after loop init",
 					NumSteps: 2,
-					CPU:      BasicCPU{registers: [8]Word{0x2000, 0, 0, 0, 0, 0, 10, 0}, pc: 0x000d, sp: 0xffff, o: 0x0000},
+					CPU:      D16CPU{registers: [8]Word{0x2000, 0, 0, 0, 0, 0, 10, 0}, pc: 0x000d, sp: 0xffff, o: 0x0000},
 				},
 				&ExpState{
 					Name:     "after first test+iteration",
 					NumSteps: 4,
-					CPU:      BasicCPU{registers: [8]Word{0x2000, 0, 0, 0, 0, 0, 9, 0}, pc: 0x000d, sp: 0xffff, o: 0x0000},
+					CPU:      D16CPU{registers: [8]Word{0x2000, 0, 0, 0, 0, 0, 9, 0}, pc: 0x000d, sp: 0xffff, o: 0x0000},
 					Mems: []ExpMem{
 						{0x2010, []Word{0x0000}},
 					},
@@ -197,7 +197,7 @@ func TestStep(t *testing.T) {
 				&ExpState{
 					Name:     "after loop completion",
 					NumSteps: 4*8 + 3,
-					CPU:      BasicCPU{registers: [8]Word{0x2000, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0013, sp: 0xffff, o: 0x0000},
+					CPU:      D16CPU{registers: [8]Word{0x2000, 0, 0, 0, 0, 0, 0, 0}, pc: 0x0013, sp: 0xffff, o: 0x0000},
 					Mems: []ExpMem{
 						{0x2000, []Word{0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000}},
 					},
@@ -205,12 +205,12 @@ func TestStep(t *testing.T) {
 				&ExpState{
 					Name:     "before JSR",
 					NumSteps: 1,
-					CPU:      BasicCPU{registers: [8]Word{0x2000, 0, 0, 0x0004}, pc: 0x0014, sp: 0xffff, o: 0x0000},
+					CPU:      D16CPU{registers: [8]Word{0x2000, 0, 0, 0x0004}, pc: 0x0014, sp: 0xffff, o: 0x0000},
 				},
 				&ExpState{
 					Name:     "in testsub",
 					NumSteps: 1,
-					CPU:      BasicCPU{registers: [8]Word{0x2000, 0, 0, 0x0004}, pc: 0x0018, sp: 0xfffe, o: 0x0000},
+					CPU:      D16CPU{registers: [8]Word{0x2000, 0, 0, 0x0004}, pc: 0x0018, sp: 0xfffe, o: 0x0000},
 					Mems: []ExpMem{
 						{0xfffe, []Word{0x0016, 0x0000}},
 					},
@@ -218,17 +218,17 @@ func TestStep(t *testing.T) {
 				&ExpState{
 					Name:     "returned from testsub",
 					NumSteps: 2,
-					CPU:      BasicCPU{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x0016, sp: 0xffff, o: 0x0000},
+					CPU:      D16CPU{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x0016, sp: 0xffff, o: 0x0000},
 				},
 				&ExpState{
 					Name:     "entering crash loop",
 					NumSteps: 1,
-					CPU:      BasicCPU{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x001a, sp: 0xffff, o: 0x0000},
+					CPU:      D16CPU{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x001a, sp: 0xffff, o: 0x0000},
 				},
 				&ExpState{
 					Name:     "still in crash loop",
 					NumSteps: 10,
-					CPU:      BasicCPU{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x001a, sp: 0xffff, o: 0x0000},
+					CPU:      D16CPU{registers: [8]Word{0x2000, 0, 0, 0x0040}, pc: 0x001a, sp: 0xffff, o: 0x0000},
 				},
 			},
 		},
@@ -237,9 +237,9 @@ func TestStep(t *testing.T) {
 	for i := range tests {
 		test := &tests[i]
 
-		state := BasicMachineState{}
-		state.BasicCPU.Init()
-		copy(state.BasicMemoryState.Data[0:], test.InitMem)
+		state := D16MachineState{}
+		state.D16CPU.Init()
+		copy(state.D16MemoryState.Data[0:], test.InitMem)
 
 		for _, expState := range test.ExpStates {
 			expState.StateCheck(t, test.Name, &state)

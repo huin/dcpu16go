@@ -11,10 +11,10 @@ func splitOpWord(w Word) (upper6, middle6, lower4 Word) {
 	return
 }
 
-// BasicInstructionSet is the table of basic instructions supported by the
+// D16InstructionSet is the table of basic instructions supported by the
 // DCPU-16. This implementation avoids memory allocation, but the instruction
 // returned is only good for use until the next call to the Instruction method.
-type BasicInstructionSet struct {
+type D16InstructionSet struct {
 	initialized bool
 	jsrInst     JsrInst
 	binarySet   [0x10]BinaryInstruction
@@ -35,12 +35,12 @@ type BasicInstructionSet struct {
 	ifbInst     IfbInst
 
 	// Use separate pools of values so that two values in play at the same time
-	// don't interfere (see doc for BasicValueSet).
-	aValueSet BasicValueSet
-	bValueSet BasicValueSet
+	// don't interfere (see doc for D16ValueSet).
+	aValueSet D16ValueSet
+	bValueSet D16ValueSet
 }
 
-func (is *BasicInstructionSet) init() {
+func (is *D16InstructionSet) init() {
 	is.binarySet = [0x10]BinaryInstruction{
 		nil, // Indicates unary instruction.
 		&is.setInst, &is.addInst, &is.subInst, &is.mulInst,
@@ -50,7 +50,7 @@ func (is *BasicInstructionSet) init() {
 	}
 }
 
-func (is *BasicInstructionSet) unaryInstruction(upper6, middle6 Word) (instruction UnaryInstruction, a Value, err error) {
+func (is *D16InstructionSet) unaryInstruction(upper6, middle6 Word) (instruction UnaryInstruction, a Value, err error) {
 	if middle6 != 0x001 {
 		err = InvalidUnaryOpCodeError(middle6)
 		return
@@ -60,7 +60,7 @@ func (is *BasicInstructionSet) unaryInstruction(upper6, middle6 Word) (instructi
 	return
 }
 
-func (is *BasicInstructionSet) binaryInstruction(upper6, middle6, lower4 Word) (instruction BinaryInstruction, a, b Value, err error) {
+func (is *D16InstructionSet) binaryInstruction(upper6, middle6, lower4 Word) (instruction BinaryInstruction, a, b Value, err error) {
 	opCode := lower4
 	if int(opCode) >= len(is.binarySet) {
 		// Shouldn't happen with the given set.
@@ -84,7 +84,7 @@ func (is *BasicInstructionSet) binaryInstruction(upper6, middle6, lower4 Word) (
 	return
 }
 
-func (is *BasicInstructionSet) NumExtraWords(w Word) (Word, error) {
+func (is *D16InstructionSet) NumExtraWords(w Word) (Word, error) {
 	if !is.initialized {
 		is.init()
 	}
@@ -108,7 +108,7 @@ func (is *BasicInstructionSet) NumExtraWords(w Word) (Word, error) {
 	return a.NumExtraWords(), nil
 }
 
-func (is *BasicInstructionSet) Instruction(w Word) (Instruction, error) {
+func (is *D16InstructionSet) Instruction(w Word) (Instruction, error) {
 	if !is.initialized {
 		is.init()
 	}

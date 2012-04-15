@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-var basicInstructionSetImplTest InstructionSet = &BasicInstructionSet{}
+var basicInstructionSetImplTest InstructionSet = &D16InstructionSet{}
 
 type FakeWordLoader struct {
 	t     *testing.T
@@ -66,7 +66,7 @@ func TestInstructionLoad(t *testing.T) {
 		{"SET PC, 0x001a", []Word{0x7dc1, 0x001a}},
 	}
 
-	var instructionSet BasicInstructionSet
+	var instructionSet D16InstructionSet
 
 	for _, test := range tests {
 		wordLoader := &FakeWordLoader{t, test.Words, 0}
@@ -204,14 +204,14 @@ func TestInstructionExecute(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		var state BasicMachineState
+		var state D16MachineState
 		state.Init()
-		state.BasicCPU.WriteRegister(RegA, test.InitA)
+		state.D16CPU.WriteRegister(RegA, test.InitA)
 		test.Inst.Execute(&state)
-		if test.ExpA != state.BasicCPU.registers[RegA] || test.ExpO != state.BasicCPU.o {
+		if test.ExpA != state.D16CPU.registers[RegA] || test.ExpO != state.D16CPU.o {
 			t.Errorf("%s: %v", test.Name, test.Inst.String())
 			t.Errorf("  expected: A=0x%04x O=0x%04x", test.ExpA, test.ExpO)
-			t.Errorf("       got: A=0x%04x O=0x%04x", state.BasicCPU.registers[RegA], state.BasicCPU.o)
+			t.Errorf("       got: A=0x%04x O=0x%04x", state.D16CPU.registers[RegA], state.D16CPU.o)
 		}
 	}
 }
