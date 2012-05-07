@@ -18,6 +18,11 @@ type Value interface {
 	String() string
 }
 
+type ValueLiteral interface {
+	Value
+	SetLiteral(Word)
+}
+
 type ValueSet interface {
 	Value(w Word) (Value, error)
 }

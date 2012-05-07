@@ -12,9 +12,7 @@ func splitOpWord(w Word) (upper6, middle6, lower4 Word) {
 }
 
 // D16InstructionSet is the table of basic instructions supported by the
-// DCPU-16. This implementation avoids memory allocation, but the instruction
-// returned is only good for use until the next call to the Instruction method.
-// Use Instruction.Clone if the value is needed later.
+// DCPU-16.
 type D16InstructionSet struct {
 	initialized bool
 	jsrInst     JsrInst
@@ -133,6 +131,10 @@ func (is *D16InstructionSet) Instruction(w Word) (Instruction, error) {
 	}
 	instruction.SetUnaryValue(a)
 	return instruction, nil
+}
+
+func (is *D16InstructionSet) InstructionByName(name string) (Instruction, bool) {
+	panic("unimplemented")
 }
 
 // unaryInst forms common data and code for instructions that take one value.

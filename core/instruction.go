@@ -34,11 +34,18 @@ type BinaryInstruction interface {
 	SetBinaryValue(Value, Value)
 }
 
+// InstructionSet is the common interface for the instruction set understood by
+// a CPU implementation. In general any returned instructions are only valid
+// until the next instruction is returned (Instruction.Clone may be called
+// before then if the instruction is required for a longer period).
 type InstructionSet interface {
 	// Instruction returns the instruction for the given word. The returned
 	// Instruction must have LoadNextWords called on it before it will function
 	// properly.
 	Instruction(word Word) (Instruction, error)
+
+	// Instruction returns the instruction for the given name.
+	InstructionByName(string) (Instruction, bool)
 
 	// NumExtraWords returns the number of extra words required to be read for
 	// the given instruction.
