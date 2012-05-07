@@ -18,8 +18,8 @@ type CPU interface {
 	ReadIncSP() Word
 	// Decrements SP and reads it (--SP).
 	DecReadSP() Word
-	O() Word
-	WriteO(value Word)
+	EX() Word
+	WriteEX(value Word)
 }
 
 func CPUEquals(a, b CPU) bool {
@@ -28,7 +28,7 @@ func CPUEquals(a, b CPU) bool {
 			return false
 		}
 	}
-	return a.PC() == b.PC() && a.SP() == b.SP() && a.O() == b.O()
+	return a.PC() == b.PC() && a.SP() == b.SP() && a.EX() == b.EX()
 }
 
 type Memory interface {

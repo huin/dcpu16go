@@ -4,7 +4,7 @@ type D16CPU struct {
 	registers [8]Word // registers A-J, index with RegisterId.
 	pc        Word    // Program counter.
 	sp        Word    // Stack pointer.
-	o         Word    // Overflow.
+	ex        Word    // Extra/excess.
 }
 
 func (cpu *D16CPU) Init() {
@@ -14,7 +14,7 @@ func (cpu *D16CPU) Init() {
 
 	cpu.pc = 0x0000
 	cpu.sp = 0xffff
-	cpu.o = 0x0000
+	cpu.ex = 0x0000
 }
 
 func (cpu *D16CPU) Register(id RegisterId) Word {
@@ -61,10 +61,10 @@ func (cpu *D16CPU) DecReadSP() Word {
 	return cpu.sp
 }
 
-func (cpu *D16CPU) O() Word {
-	return cpu.o
+func (cpu *D16CPU) EX() Word {
+	return cpu.ex
 }
 
-func (cpu *D16CPU) WriteO(value Word) {
-	cpu.o = value
+func (cpu *D16CPU) WriteEX(value Word) {
+	cpu.ex = value
 }

@@ -34,41 +34,9 @@ func (l *FakeWordLoader) exhausted() bool {
 }
 
 func TestInstructionLoad(t *testing.T) {
-	type Test struct {
-		Expected string
-		Words    []Word
-	}
-
-	// Test examples taken from dcpu-16.txt, and modified such that literal lengths
-	// indicate "next word" (4 hex digits) vs "embedded literal" (2 hex digits),
-	// and replacing labels with address values.
-	tests := []Test{
-		// Try some basic stuff
-		{"SET A, 0x0030", []Word{0x7c01, 0x0030}},
-		{"SET [0x1000], 0x0020", []Word{0x7de1, 0x1000, 0x0020}},
-		{"SUB A, [0x1000]", []Word{0x7803, 0x1000}},
-		{"IFN A, 0x10", []Word{0xc00d}},
-		{"SET PC, 0x001a", []Word{0x7dc1, 0x001a}},
-		// Do a loopy thing
-		{"SET I, 0x0a", []Word{0xa861}},
-		{"SET A, 0x2000", []Word{0x7c01, 0x2000}},
-		{"SET [0x2000+I], [A]", []Word{0x2161, 0x2000}},
-		{"SUB I, 0x01", []Word{0x8463}},
-		{"IFN I, 0x00", []Word{0x806d}},
-		{"SET PC, 0x000d", []Word{0x7dc1, 0x000d}},
-		// Call a subroutine
-		{"SET X, 0x04", []Word{0x9031}},
-		{"JSR 0x0018", []Word{0x7c10, 0x0018}},
-		{"SET PC, 0x001a", []Word{0x7dc1, 0x001a}},
-		{"SHL X, 0x04", []Word{0x9037}},
-		{"SET PC, POP", []Word{0x61c1}},
-		// Hang forever. X should now be 0x40 if everything went right.
-		{"SET PC, 0x001a", []Word{0x7dc1, 0x001a}},
-	}
-
 	var instructionSet D16InstructionSet
 
-	for _, test := range tests {
+	for _, test := range notchExample {
 		wordLoader := &FakeWordLoader{t, test.Words, 0}
 		instruction, err := InstructionLoad(wordLoader, &instructionSet)
 		if err != nil {
@@ -76,23 +44,23 @@ func TestInstructionLoad(t *testing.T) {
 			continue
 		}
 		if !wordLoader.exhausted() {
-			t.Errorf("Instruction %v (%#v) did not exaust words to load", instruction, test.Words)
+			t.Errorf("Instruction %v (%#v) did not exhaust words to load", instruction, test.Words)
 			continue
 		}
 		str := instruction.String()
-		if test.Expected != str {
+		if test.Str != str {
 			t.Errorf("Instruction %v (%#v) disagrees on string repr (expected %q, got %q)",
-				instruction, test.Words, test.Expected, str)
+				instruction, test.Words, test.Str, str)
 		}
 	}
 }
 
-// Returns a binaryInst with value A as register A, and value B as the given
-// literal value.
-func binInstValue(bValue Word) binaryInst {
-	a := &RegisterValue{Reg: RegA}
-	b := &WordValue{}
-	b.Value = bValue
+// Returns a binaryInst with register A for value B, and the given literal for
+// value A.
+func binInstValue(literal Word) binaryInst {
+	a := &WordValue{}
+	a.Value = literal
+	b := &RegisterValue{Reg: RegA}
 	return binaryInst{a, b}
 }
 
@@ -102,7 +70,7 @@ func TestInstructionExecute(t *testing.T) {
 		InitA Word
 		Inst  Instruction
 		ExpA  Word
-		ExpO  Word
+		ExpEX Word
 	}
 
 	tests := []Test{
@@ -223,10 +191,10 @@ func TestInstructionExecute(t *testing.T) {
 		state.Init()
 		state.D16CPU.WriteRegister(RegA, test.InitA)
 		test.Inst.Execute(&state)
-		if test.ExpA != state.D16CPU.registers[RegA] || test.ExpO != state.D16CPU.o {
+		if test.ExpA != state.D16CPU.registers[RegA] || test.ExpEX != state.D16CPU.ex {
 			t.Errorf("%s: %v", test.Name, test.Inst.String())
-			t.Errorf("  expected: A=0x%04x O=0x%04x", test.ExpA, test.ExpO)
-			t.Errorf("       got: A=0x%04x O=0x%04x", state.D16CPU.registers[RegA], state.D16CPU.o)
+			t.Errorf("  expected: A=0x%04x EX=0x%04x", test.ExpA, test.ExpEX)
+			t.Errorf("       got: A=0x%04x EX=0x%04x", state.D16CPU.registers[RegA], state.D16CPU.ex)
 		}
 	}
 }

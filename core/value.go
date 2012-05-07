@@ -1,12 +1,17 @@
 package core
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type ValueCodeError Word
 
 func (err ValueCodeError) Error() string {
 	return fmt.Sprintf("invalid value code 0x%02x", Word(err))
 }
+
+var ValueContextError = errors.New("value cannot be used in that context")
 
 type Value interface {
 	Write(MachineState, Word)
@@ -24,5 +29,5 @@ type ValueLiteral interface {
 }
 
 type ValueSet interface {
-	Value(w Word) (Value, error)
+	Value(w Word, asValueB bool) (Value, error)
 }

@@ -12,13 +12,21 @@ type D16ValueSet struct {
 	registerValue           RegisterValue
 	registerAddressValue    RegisterAddressValue
 	registerRelAddressValue RegisterRelAddressValue
+	pickValue               PickValue
 	addressValue            AddressValue
 	wordValue               WordValue
 	literalValue            LiteralValue
 }
 
-func (vs *D16ValueSet) Value(w Word) (Value, error) {
+func (vs *D16ValueSet) Value(w Word, asValueB bool) (Value, error) {
 	var value Value
+	if asValueB {
+		if w == 0x18 {
+			return PushValue{}, nil
+		} else if 0x20 <= w && w <= 0x3f {
+			return nil, ValueContextError
+		}
+	}
 	switch {
 	case 0x00 <= w && w <= 0x07:
 		vs.registerValue.Reg = RegisterId(w)
@@ -34,19 +42,19 @@ func (vs *D16ValueSet) Value(w Word) (Value, error) {
 	case 0x19 == w:
 		value = PeekValue{}
 	case 0x1a == w:
-		value = PushValue{}
+		value = &vs.pickValue
 	case 0x1b == w:
 		value = SpValue{}
 	case 0x1c == w:
 		value = PcValue{}
 	case 0x1d == w:
-		value = OValue{}
+		value = EXValue{}
 	case 0x1e == w:
 		value = &vs.addressValue
 	case 0x1f == w:
 		value = &vs.wordValue
 	case 0x20 <= w && w <= 0x3f:
-		vs.literalValue.Literal = w - 0x20
+		vs.literalValue.Literal = w - 0x21
 		return &vs.literalValue, nil
 	default:
 		return nil, ValueCodeError(w)
@@ -143,7 +151,7 @@ func (v *RegisterRelAddressValue) Clone() Value {
 }
 
 func (v *RegisterRelAddressValue) String() string {
-	return fmt.Sprintf("[0x%04x+%v]", v.Value, v.Reg)
+	return fmt.Sprintf("[%v+0x%04x]", v.Reg, v.Value)
 }
 
 // 0x18: POP / [SP++]
@@ -167,7 +175,7 @@ func (v PopValue) String() string {
 	return "POP"
 }
 
-// 0x19: PEEK / [SP]
+// 0x19: PEEK / [SP] if in a
 type PeekValue struct {
 	noExtraWord
 }
@@ -188,7 +196,7 @@ func (v PeekValue) String() string {
 	return "PEEK"
 }
 
-// 0x1a: PUSH / [--SP]
+// 0x19: PUSH / [--SP] if in b
 type PushValue struct {
 	noExtraWord
 }
@@ -207,6 +215,28 @@ func (v PushValue) Clone() Value {
 
 func (v PushValue) String() string {
 	return "PUSH"
+}
+
+// 0x1a: [SP + next word] / PICK n
+type PickValue struct {
+	extraWord
+}
+
+func (v *PickValue) Write(state MachineState, word Word) {
+	panic("unimplemented")
+}
+
+func (v *PickValue) Read(state MachineState) Word {
+	panic("unimplemented")
+}
+
+func (v *PickValue) Clone() Value {
+	c := *v
+	return &c
+}
+
+func (v *PickValue) String() string {
+	return fmt.Sprintf("PICK 0x%04x", v.extraWord.Value)
 }
 
 // 0x1b: SP
@@ -251,25 +281,25 @@ func (v PcValue) String() string {
 	return "PC"
 }
 
-// 0x1d: O
-type OValue struct {
+// 0x1d: EX
+type EXValue struct {
 	noExtraWord
 }
 
-func (v OValue) Write(state MachineState, word Word) {
-	state.WriteO(word)
+func (v EXValue) Write(state MachineState, word Word) {
+	state.WriteEX(word)
 }
 
-func (v OValue) Read(state MachineState) Word {
-	return state.O()
+func (v EXValue) Read(state MachineState) Word {
+	return state.EX()
 }
 
-func (v OValue) Clone() Value {
+func (v EXValue) Clone() Value {
 	return v
 }
 
-func (v OValue) String() string {
-	return "O"
+func (v EXValue) String() string {
+	return "EX"
 }
 
 // 0x1e: [next word]
@@ -316,7 +346,7 @@ func (v *WordValue) String() string {
 	return fmt.Sprintf("0x%04x", v.Value)
 }
 
-// 0x20-0x3f: literal value 0x00-0x1f (literal)
+// 0x20-0x3f: literal value 0xffff-0x1e (-1..30) (literal) (only for a)
 type LiteralValue struct {
 	noExtraWord
 	Literal Word
@@ -336,5 +366,5 @@ func (v *LiteralValue) Clone() Value {
 }
 
 func (v *LiteralValue) String() string {
-	return fmt.Sprintf("0x%02x", v.Literal)
+	return fmt.Sprintf("%d", int16(v.Literal))
 }
