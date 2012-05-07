@@ -740,3 +740,53 @@ func (o *IfuInst) Clone() Instruction {
 func (o *IfuInst) String() string {
 	return o.binaryInst.format("IFU")
 }
+
+// 0x1a: ADX b, a - sets b to b+a+EX, sets EX to 0x0001 if there is an
+// over-flow, 0x0 otherwise
+type AdxInst struct {
+	binaryInst
+}
+
+func (o *AdxInst) Execute(state MachineState) error {
+	a, b, ex := o.A.Read(state), o.B.Read(state), state.EX()
+	ex, result := (DWord(b) + DWord(a) + DWord(ex)).Split()
+	o.B.Write(state, result)
+	state.WriteEX(ex)
+	return nil
+}
+
+func (o *AdxInst) Clone() Instruction {
+	return &AdxInst{o.binaryInst.clone()}
+}
+
+func (o *AdxInst) String() string {
+	return o.binaryInst.format("ADX")
+}
+
+// 0x1a: SBX b, a - sets b to b-a+EX, sets EX to 0xFFFF if there is an
+// under-flow, 0x0 otherwise
+type SbxInst struct {
+	binaryInst
+}
+
+func (o *SbxInst) Execute(state MachineState) error {
+	a, b, ex := o.A.Read(state), o.B.Read(state), state.EX()
+	fmt.Printf("a=%04x b=%04x ex=%04x\n", a, b, ex)
+	wideResult := (DWord(b) - DWord(a)) + DWord(ex)
+	result := Word(wideResult & 0xffff)
+	ex = 0
+	if result < 0 {
+		ex = 1
+	}
+	o.B.Write(state, result)
+	state.WriteEX(ex)
+	return nil
+}
+
+func (o *SbxInst) Clone() Instruction {
+	return &SbxInst{o.binaryInst.clone()}
+}
+
+func (o *SbxInst) String() string {
+	return o.binaryInst.format("SBX")
+}
