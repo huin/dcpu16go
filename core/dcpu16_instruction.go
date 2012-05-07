@@ -25,17 +25,17 @@ type D16InstructionSet struct {
 	addInst AddInst
 	subInst SubInst
 	mulInst MulInst
-	//mliInst MliInst  // TODO
+	mliInst MliInst
 	divInst DivInst
-	//dviInst DviInst  // TODO
+	dviInst DviInst
 	modInst ModInst
-	//mdiInst MdiInst  // TODO
+	mdiInst MdiInst
 
 	andInst AndInst
 	borInst BorInst
 	xorInst XorInst
 	shrInst ShrInst
-	//asrInst AsrInst  // TODO
+	asrInst AsrInst
 	shlInst ShlInst
 
 	ifbInst IfbInst
@@ -69,13 +69,13 @@ func (is *D16InstructionSet) init() {
 
 		// 0x02+
 		&is.addInst, &is.subInst,
-		&is.mulInst, nil, /*TODO mliInst*/
-		&is.divInst, nil, /*TODO dviInst*/
-		&is.modInst, nil, /*TODO mdiInst*/
+		&is.mulInst, &is.mliInst,
+		&is.divInst, &is.dviInst,
+		&is.modInst, &is.mdiInst,
 
 		// 0x0a+
 		&is.andInst, &is.borInst, &is.xorInst,
-		&is.shrInst, nil /*TODO asrInst*/, &is.shlInst,
+		&is.shrInst, &is.asrInst, &is.shlInst,
 
 		// 0x10+
 		&is.ifbInst, nil, /*TODO ifcInst*/
@@ -250,7 +250,7 @@ func (o *binaryInst) format(name string) string {
 	return fmt.Sprintf("%s %v, %v", name, o.B, o.A)
 }
 
-// 0x1: SET b, a - sets b to a
+// 0x01: SET b, a - sets b to a
 type SetInst struct {
 	binaryInst
 }
@@ -268,16 +268,16 @@ func (o *SetInst) String() string {
 	return o.binaryInst.format("SET")
 }
 
-// 0x2: ADD b, a - sets b to b+a, sets EX to 0x0001 if there's an overflow, 0x0 otherwise
+// 0x02: ADD b, a - sets b to b+a, sets EX to 0x0001 if there's an overflow, 0x0 otherwise
 type AddInst struct {
 	binaryInst
 }
 
 func (o *AddInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	result := DWord(b) + DWord(a)
-	o.B.Write(state, Word(result&0xffff))
-	state.WriteEX(Word(result >> 16))
+	ex, result := (DWord(b) + DWord(a)).Split()
+	o.B.Write(state, result)
+	state.WriteEX(ex)
 	return nil
 }
 
@@ -289,16 +289,16 @@ func (o *AddInst) String() string {
 	return o.binaryInst.format("ADD")
 }
 
-// 0x3: SUB b, a - sets b to b-a, sets EX to 0xffff if there's an underflow, 0x0 otherwise
+// 0x03: SUB b, a - sets b to b-a, sets EX to 0xffff if there's an underflow, 0x0 otherwise
 type SubInst struct {
 	binaryInst
 }
 
 func (o *SubInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	result := DWord(b) - DWord(a)
-	o.B.Write(state, Word(result&0xffff))
-	state.WriteEX(Word(result >> 16))
+	ex, result := (DWord(b) - DWord(a)).Split()
+	o.B.Write(state, result)
+	state.WriteEX(ex)
 	return nil
 }
 
@@ -310,16 +310,17 @@ func (o *SubInst) String() string {
 	return o.binaryInst.format("SUB")
 }
 
-// 0x4: MUL b, a - sets b to b*a, sets EX to ((b*a)>>16)&0xffff
+// 0x04: MUL b, a - sets b to b*a, sets EX to ((b*a)>>16)&0xffff (treats b, a as
+// unsigned)
 type MulInst struct {
 	binaryInst
 }
 
 func (o *MulInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	result := DWord(b) * DWord(a)
-	o.B.Write(state, Word(result&0xffff))
-	state.WriteEX(Word(result >> 16))
+	ex, result := (DWord(b) * DWord(a)).Split()
+	o.B.Write(state, result)
+	state.WriteEX(ex)
 	return nil
 }
 
@@ -331,7 +332,29 @@ func (o *MulInst) String() string {
 	return o.binaryInst.format("MUL")
 }
 
-// 0x5: DIV b, a - sets b to b/a, sets EX to ((b<<16)/a)&0xffff. if a==0, sets b and EX to 0 instructionead.
+// 0x05: MLI b, a - like MUL, but treat b, a as signed
+type MliInst struct {
+	binaryInst
+}
+
+func (o *MliInst) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	ex, result := (b.AsDSigned() * a.AsDSigned()).Split()
+	o.B.Write(state, result)
+	state.WriteEX(ex)
+	return nil
+}
+
+func (o *MliInst) Clone() Instruction {
+	return &MliInst{o.binaryInst.clone()}
+}
+
+func (o *MliInst) String() string {
+	return o.binaryInst.format("MLI")
+}
+
+// 0x06: DIV b, a - sets b to b/a, sets EX to ((b<<16)/a)&0xffff. if a==0, sets
+// b and EX to 0 instead. (treats b, a as unsigned)
 type DivInst struct {
 	binaryInst
 }
@@ -342,9 +365,9 @@ func (o *DivInst) Execute(state MachineState) error {
 		o.B.Write(state, 0)
 		state.WriteEX(0)
 	} else {
-		result := (DWord(b) << 16) / DWord(a)
-		o.B.Write(state, Word(result>>16))
-		state.WriteEX(Word(result & 0xffff))
+		result, ex := ((DWord(b) << 16) / DWord(a)).Split()
+		o.B.Write(state, result)
+		state.WriteEX(ex)
 	}
 	return nil
 }
@@ -357,7 +380,33 @@ func (o *DivInst) String() string {
 	return o.binaryInst.format("DIV")
 }
 
-// 0x6: MOD b, a - sets b to b%a. if a==0, sets b to 0 instructionead.
+// 0x07: DVI b, a - like DIV, but treat b, a as signed. Rounds towards 0
+type DviInst struct {
+	binaryInst
+}
+
+func (o *DviInst) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	if a == 0 {
+		o.B.Write(state, 0)
+		state.WriteEX(0)
+	} else {
+		result, ex := ((b.AsDSigned() << 16) / a.AsDSigned()).Split()
+		o.B.Write(state, result)
+		state.WriteEX(ex)
+	}
+	return nil
+}
+
+func (o *DviInst) Clone() Instruction {
+	return &DviInst{o.binaryInst.clone()}
+}
+
+func (o *DviInst) String() string {
+	return o.binaryInst.format("DVI")
+}
+
+// 0x08: MOD b, a - sets b to b%a. if a==0, sets b to 0 instructionead.
 type ModInst struct {
 	binaryInst
 }
@@ -380,28 +429,87 @@ func (o *ModInst) String() string {
 	return o.binaryInst.format("MOD")
 }
 
-// 0x7: SHL b, a - sets b to b<<a, sets EX to ((b<<a)>>16)&0xffff
-type ShlInst struct {
+// 0x09: MDI b, a - like MOD, but treat b, a as signed. (MDI -7, 16 == -7)
+type MdiInst struct {
 	binaryInst
 }
 
-func (o *ShlInst) Execute(state MachineState) error {
+func (o *MdiInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	result := DWord(b) << DWord(a)
-	o.B.Write(state, Word(result))
-	state.WriteEX(Word(result >> 16))
+	if a == 0 {
+		o.B.Write(state, 0)
+	} else {
+		o.B.Write(state, Word(SWord(b)%SWord(a)))
+	}
 	return nil
 }
 
-func (o *ShlInst) Clone() Instruction {
-	return &ShlInst{o.binaryInst.clone()}
+func (o *MdiInst) Clone() Instruction {
+	return &MdiInst{o.binaryInst.clone()}
 }
 
-func (o *ShlInst) String() string {
-	return o.binaryInst.format("SHL")
+func (o *MdiInst) String() string {
+	return o.binaryInst.format("MDI")
 }
 
-// 0x8: SHR b, a - sets b to b>>a, sets EX to ((b<<16)>>a)&0xffff
+// 0x0a: AND b, a - sets b to b&a
+type AndInst struct {
+	binaryInst
+}
+
+func (o *AndInst) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	o.B.Write(state, b&a)
+	return nil
+}
+
+func (o *AndInst) Clone() Instruction {
+	return &AndInst{o.binaryInst.clone()}
+}
+
+func (o *AndInst) String() string {
+	return o.binaryInst.format("AND")
+}
+
+// 0x0b: BOR b, a - sets b to b|a
+type BorInst struct {
+	binaryInst
+}
+
+func (o *BorInst) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	o.B.Write(state, b|a)
+	return nil
+}
+
+func (o *BorInst) Clone() Instruction {
+	return &BorInst{o.binaryInst.clone()}
+}
+
+func (o *BorInst) String() string {
+	return o.binaryInst.format("BOR")
+}
+
+// 0x0c: XOR b, a - sets b to b^a
+type XorInst struct {
+	binaryInst
+}
+
+func (o *XorInst) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	o.B.Write(state, b^a)
+	return nil
+}
+
+func (o *XorInst) Clone() Instruction {
+	return &XorInst{o.binaryInst.clone()}
+}
+
+func (o *XorInst) String() string {
+	return o.binaryInst.format("XOR")
+}
+
+// 0x0d: SHR b, a - sets b to b>>a, sets EX to ((b<<16)>>a)&0xffff
 type ShrInst struct {
 	binaryInst
 }
@@ -422,64 +530,53 @@ func (o *ShrInst) String() string {
 	return o.binaryInst.format("SHR")
 }
 
-// 0x9: AND b, a - sets b to b&a
-type AndInst struct {
+// 0x0e: ASR b, a - sets b to b>>a, sets EX to ((b<<16)>>>a)&0xffff (arithmetic
+// shift) (treats b as signed)
+type AsrInst struct {
 	binaryInst
 }
 
-func (o *AndInst) Execute(state MachineState) error {
+func (o *AsrInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	o.B.Write(state, b&a)
+	result, ex := ((b.AsDSigned() << 16) >> a).Split()
+	o.B.Write(state, result)
+	state.WriteEX(ex)
 	return nil
 }
 
-func (o *AndInst) Clone() Instruction {
-	return &AndInst{o.binaryInst.clone()}
+func (o *AsrInst) Clone() Instruction {
+	return &AsrInst{o.binaryInst.clone()}
 }
 
-func (o *AndInst) String() string {
-	return o.binaryInst.format("AND")
+func (o *AsrInst) String() string {
+	return o.binaryInst.format("ASR")
 }
 
-// 0xa: BOR b, a - sets b to b|a
-type BorInst struct {
+// 0x0f: SHL b, a - sets b to b<<a, sets EX to ((b<<a)>>16)&0xffff
+type ShlInst struct {
 	binaryInst
 }
 
-func (o *BorInst) Execute(state MachineState) error {
+func (o *ShlInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	o.B.Write(state, b|a)
+	result := DWord(b) << DWord(a)
+	o.B.Write(state, Word(result))
+	state.WriteEX(Word(result >> 16))
 	return nil
 }
 
-func (o *BorInst) Clone() Instruction {
-	return &BorInst{o.binaryInst.clone()}
+func (o *ShlInst) Clone() Instruction {
+	return &ShlInst{o.binaryInst.clone()}
 }
 
-func (o *BorInst) String() string {
-	return o.binaryInst.format("BOR")
+func (o *ShlInst) String() string {
+	return o.binaryInst.format("SHL")
 }
 
-// 0xb: XOR b, a - sets b to b^a
-type XorInst struct {
-	binaryInst
-}
+// TODO 0x10
+// TODO 0x11
 
-func (o *XorInst) Execute(state MachineState) error {
-	a, b := o.A.Read(state), o.B.Read(state)
-	o.B.Write(state, b^a)
-	return nil
-}
-
-func (o *XorInst) Clone() Instruction {
-	return &XorInst{o.binaryInst.clone()}
-}
-
-func (o *XorInst) String() string {
-	return o.binaryInst.format("XOR")
-}
-
-// 0xc: IFE b, a - performs next instruction only if b==a
+// 0x12: IFE b, a - performs next instruction only if b==a
 type IfeInst struct {
 	binaryInst
 }
@@ -500,7 +597,7 @@ func (o *IfeInst) String() string {
 	return o.binaryInst.format("IFE")
 }
 
-// 0xd: IFN b, a - performs next instruction only if b!=a
+// 0x13: IFN b, a - performs next instruction only if b!=a
 type IfnInst struct {
 	binaryInst
 }

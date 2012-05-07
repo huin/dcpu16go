@@ -107,6 +107,17 @@ func TestInstructionExecute(t *testing.T) {
 			0x1234, &MulInst{binInstValue(0x0100)},
 			0x3400, 0x0012,
 		},
+		// MliInst
+		{
+			"MLI -5 * 9 = -45",
+			Signed(-5), &MliInst{binInstValue(9)},
+			Signed(-45), 0xffff,
+		},
+		{
+			"MLI 0x1234 * 0x0100 = 0x3400, with carry=0x0012",
+			0x1234, &MliInst{binInstValue(0x0100)},
+			0x3400, 0x0012,
+		},
 		// DivInst
 		{
 			"DIV 12 / 3 = 4",
@@ -128,6 +139,32 @@ func TestInstructionExecute(t *testing.T) {
 			5, &DivInst{binInstValue(0)},
 			0, 0,
 		},
+		// DviInst
+		{
+			"DVI 12 / -3 = -4",
+			12, &DviInst{binInstValue(Signed(-3))},
+			Signed(-4), 0,
+		},
+		{
+			"DVI -12 / 3 = -4",
+			Signed(-12), &DviInst{binInstValue(3)},
+			Signed(-4), 0,
+		},
+		{
+			"DVI -12 / -3 = 4",
+			Signed(-12), &DviInst{binInstValue(Signed(-3))},
+			4, 0,
+		},
+		{
+			"DVI 0x1234 / 0x0100 = 0x0012, with carry=0x3400",
+			0x1234, &DviInst{binInstValue(0x0100)},
+			0x0012, 0x3400,
+		},
+		{
+			"DVI 5 / 0 = 0, with carry=0",
+			5, &DviInst{binInstValue(0)},
+			0, 0,
+		},
 		// ModInst
 		{
 			"MOD 12 % 3 = 0",
@@ -135,36 +172,45 @@ func TestInstructionExecute(t *testing.T) {
 			0, 0,
 		},
 		{
-			"MOD 0x1234 % 0x0100 = 0x0034, with carry=0x0000",
+			"MOD 12 % 5 = 2",
+			12, &ModInst{binInstValue(5)},
+			2, 0,
+		},
+		{
+			"MOD 0x1234 % 0x0100 = 0x0034",
 			0x1234, &ModInst{binInstValue(0x0100)},
-			0x0034, 0x0000,
+			0x0034, 0,
 		},
 		{
 			"MOD 5 % 0 = 0",
 			5, &ModInst{binInstValue(0)},
 			0, 0,
 		},
-		// ShlInst
+		// MdiInst
 		{
-			"SHL 0x0123 << 4 = 0x1230",
-			0x0123, &ShlInst{binInstValue(4)},
-			0x1230, 0x0000,
+			"MDI 12 % 3 = 0",
+			12, &MdiInst{binInstValue(3)},
+			0, 0,
 		},
 		{
-			"SHL 0x0123 << 12 = 0x3000, with carry=0x0012",
-			0x0123, &ShlInst{binInstValue(12)},
-			0x3000, 0x0012,
-		},
-		// ShrInst
-		{
-			"SHR 0x1230 >> 4 = 0x0123",
-			0x1230, &ShrInst{binInstValue(4)},
-			0x0123, 0x0000,
+			"MDI 12 % 5 = 2",
+			12, &MdiInst{binInstValue(5)},
+			2, 0,
 		},
 		{
-			"SHR 0x1230 >> 8 = 0x0001, with carry=0x2300",
-			0x0123, &ShrInst{binInstValue(8)},
-			0x0001, 0x2300,
+			"MDI -7, 16 = -7",
+			Signed(-7), &MdiInst{binInstValue(16)},
+			Signed(-7), 0,
+		},
+		{
+			"MDI 0x1234 % 0x0100 = 0x0034",
+			0x1234, &MdiInst{binInstValue(0x0100)},
+			0x0034, 0,
+		},
+		{
+			"MDI 5 % 0 = 0",
+			5, &MdiInst{binInstValue(0)},
+			0, 0,
 		},
 		// AndInst
 		{
@@ -183,6 +229,39 @@ func TestInstructionExecute(t *testing.T) {
 			"XOR 0x1230 ^ 0x0410 = 0x1620",
 			0x1230, &XorInst{binInstValue(0x0410)},
 			0x1620, 0x0000,
+		},
+		// ShrInst
+		{
+			"SHR 0x1230 >> 4 = 0x0123",
+			0x1230, &ShrInst{binInstValue(4)},
+			0x0123, 0x0000,
+		},
+		{
+			"SHR 0x1230 >> 8 = 0x0001, with carry=0x2300",
+			0x0123, &ShrInst{binInstValue(8)},
+			0x0001, 0x2300,
+		},
+		// AsrInst
+		{
+			"ASR 0x1230 >>> 4 = 0x0123",
+			0x1230, &AsrInst{binInstValue(4)},
+			0x0123, 0x0000,
+		},
+		{
+			"ASR -5 >>> 1 = -3, with carry=0x8000",
+			Signed(-5), &AsrInst{binInstValue(1)},
+			Signed(-3), 0x8000,
+		},
+		// ShlInst
+		{
+			"SHL 0x0123 << 4 = 0x1230",
+			0x0123, &ShlInst{binInstValue(4)},
+			0x1230, 0x0000,
+		},
+		{
+			"SHL 0x0123 << 12 = 0x3000, with carry=0x0012",
+			0x0123, &ShlInst{binInstValue(12)},
+			0x3000, 0x0012,
 		},
 	}
 
