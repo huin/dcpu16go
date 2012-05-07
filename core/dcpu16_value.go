@@ -56,7 +56,7 @@ func (vs *D16ValueSet) Value(w Word) (Value, error) {
 
 type noExtraWord struct{}
 
-func (v noExtraWord) LoadInstValue(WordLoader) error {
+func (v noExtraWord) LoadExtraWords(WordLoader) error {
 	return nil
 }
 
@@ -68,7 +68,7 @@ type extraWord struct {
 	Value Word
 }
 
-func (v *extraWord) LoadInstValue(wordLoader WordLoader) error {
+func (v *extraWord) LoadExtraWords(wordLoader WordLoader) error {
 	var err error
 	v.Value, err = wordLoader.WordLoad()
 	return err

@@ -44,7 +44,7 @@ func TestNoValueString(t *testing.T) {
 				test.ValueWord, err)
 			continue
 		}
-		value.LoadInstValue(wordLoader)
+		value.LoadExtraWords(wordLoader)
 		if !wordLoader.exhausted() {
 			t.Errorf("Value %v (%02x) did not consume next word",
 				value, test.ValueWord)

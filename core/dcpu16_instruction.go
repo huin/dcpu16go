@@ -147,7 +147,7 @@ func (o *unaryInst) SetUnaryValue(a Value) {
 }
 
 func (o *unaryInst) LoadNextWords(wordLoader WordLoader) error {
-	return o.A.LoadInstValue(wordLoader)
+	return o.A.LoadExtraWords(wordLoader)
 }
 
 func (o *unaryInst) clone() unaryInst {
@@ -189,11 +189,11 @@ func (o *binaryInst) SetBinaryValue(a, b Value) {
 }
 
 func (o *binaryInst) LoadNextWords(wordLoader WordLoader) error {
-	err := o.A.LoadInstValue(wordLoader)
+	err := o.A.LoadExtraWords(wordLoader)
 	if err != nil {
 		return err
 	}
-	return o.B.LoadInstValue(wordLoader)
+	return o.B.LoadExtraWords(wordLoader)
 }
 
 func (o *binaryInst) clone() binaryInst {

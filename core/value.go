@@ -11,7 +11,7 @@ func (err ValueCodeError) Error() string {
 type Value interface {
 	Write(MachineState, Word)
 	Read(MachineState) Word
-	LoadInstValue(WordLoader) error
+	LoadExtraWords(WordLoader) error
 	NumExtraWords() Word
 	// Create a copy of the value.
 	Clone() Value
