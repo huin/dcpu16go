@@ -39,13 +39,13 @@ type D16InstructionSet struct {
 	shlInst ShlInst
 
 	ifbInst IfbInst
-	//ifcInst IfcInst  // TODO
+	ifcInst IfcInst
 	ifeInst IfeInst
 	ifnInst IfnInst
 	ifgInst IfgInst
-	//ifaInst IfaInst  // TODO
-	//iflInst IflInst  // TODO
-	//ifuInst IfuInst  // TODO
+	ifaInst IfaInst
+	iflInst IflInst
+	ifuInst IfuInst
 
 	//adxInst AdxInst  // TODO
 	//sbxInst SbxInst  // TODO
@@ -78,10 +78,10 @@ func (is *D16InstructionSet) init() {
 		&is.shrInst, &is.asrInst, &is.shlInst,
 
 		// 0x10+
-		&is.ifbInst, nil, /*TODO ifcInst*/
+		&is.ifbInst, &is.ifcInst,
 		&is.ifeInst, &is.ifnInst,
-		&is.ifgInst, nil, /*TODO ifaInst*/
-		nil /*TODO iflInst*/, nil, /*TODO ifuInst*/
+		&is.ifgInst, &is.ifaInst,
+		&is.iflInst, &is.ifuInst,
 
 		// 0x18+
 		nil, nil,
@@ -573,8 +573,47 @@ func (o *ShlInst) String() string {
 	return o.binaryInst.format("SHL")
 }
 
-// TODO 0x10
-// TODO 0x11
+// 0x10: IFB b, a - performs next instruction only if (b&a)!=0
+type IfbInst struct {
+	binaryInst
+}
+
+func (o *IfbInst) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	if (b & a) != 0 {
+		return nil
+	}
+	return InstructionSkip(state, state)
+}
+
+func (o *IfbInst) Clone() Instruction {
+	return &IfbInst{o.binaryInst.clone()}
+}
+
+func (o *IfbInst) String() string {
+	return o.binaryInst.format("IFB")
+}
+
+// 0x11: IFC b, a - performs next instruction only if (b&a)==0
+type IfcInst struct {
+	binaryInst
+}
+
+func (o *IfcInst) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	if (b & a) == 0 {
+		return nil
+	}
+	return InstructionSkip(state, state)
+}
+
+func (o *IfcInst) Clone() Instruction {
+	return &IfcInst{o.binaryInst.clone()}
+}
+
+func (o *IfcInst) String() string {
+	return o.binaryInst.format("IFC")
+}
 
 // 0x12: IFE b, a - performs next instruction only if b==a
 type IfeInst struct {
@@ -618,7 +657,7 @@ func (o *IfnInst) String() string {
 	return o.binaryInst.format("IFN")
 }
 
-// 0xe: IFG b, a - performs next instruction only if b>a
+// 0x14: IFG b, a - performs next instruction only if b>a
 type IfgInst struct {
 	binaryInst
 }
@@ -639,23 +678,65 @@ func (o *IfgInst) String() string {
 	return o.binaryInst.format("IFG")
 }
 
-// 0xf: IFB b, a - performs next instruction only if (b&a)!=0
-type IfbInst struct {
+// 0x15: IFA b, a - performs next instruction only if b>a (signed)
+type IfaInst struct {
 	binaryInst
 }
 
-func (o *IfbInst) Execute(state MachineState) error {
+func (o *IfaInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	if (b & a) != 0 {
-		return InstructionSkip(state, state)
+	if SWord(b) > SWord(a) {
+		return nil
 	}
-	return nil
+	return InstructionSkip(state, state)
 }
 
-func (o *IfbInst) Clone() Instruction {
-	return &IfbInst{o.binaryInst.clone()}
+func (o *IfaInst) Clone() Instruction {
+	return &IfaInst{o.binaryInst.clone()}
 }
 
-func (o *IfbInst) String() string {
-	return o.binaryInst.format("IFB")
+func (o *IfaInst) String() string {
+	return o.binaryInst.format("IFA")
+}
+
+// 0x16: IFL b, a - performs next instruction only if b<a
+type IflInst struct {
+	binaryInst
+}
+
+func (o *IflInst) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	if b < a {
+		return nil
+	}
+	return InstructionSkip(state, state)
+}
+
+func (o *IflInst) Clone() Instruction {
+	return &IflInst{o.binaryInst.clone()}
+}
+
+func (o *IflInst) String() string {
+	return o.binaryInst.format("IFL")
+}
+
+// 0x17: IFU b, a - performs next instruction only if b<a
+type IfuInst struct {
+	binaryInst
+}
+
+func (o *IfuInst) Execute(state MachineState) error {
+	a, b := o.A.Read(state), o.B.Read(state)
+	if b < a {
+		return nil
+	}
+	return InstructionSkip(state, state)
+}
+
+func (o *IfuInst) Clone() Instruction {
+	return &IfuInst{o.binaryInst.clone()}
+}
+
+func (o *IfuInst) String() string {
+	return o.binaryInst.format("IFU")
 }
