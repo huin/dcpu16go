@@ -118,6 +118,15 @@ func TestValueWrite(t *testing.T) {
 			},
 			ExpCPU: D16CPU{sp: 0xfffe},
 		},
+		{
+			Value:     &PickValue{extraWord{0x0001}},
+			InitCPU:   D16CPU{sp: 0xfffe},
+			WriteWord: 0x1234,
+			ExpStates: []StateChecker{
+				&ExpMem{0xffff, []Word{0x1234}},
+			},
+			ExpCPU: D16CPU{sp: 0xfffe},
+		},
 	}
 
 	for _, test := range tests {
@@ -176,6 +185,14 @@ func TestValueRead(t *testing.T) {
 			InitMemOffset: 0xfffe,
 			InitMem:       []Word{0x5678, 0x0000},
 			ExpRead:       0x5678,
+			ExpCPU:        D16CPU{sp: 0xfffe},
+		},
+		{
+			Value:         &PickValue{extraWord{0x0001}},
+			InitCPU:       D16CPU{sp: 0xfffe},
+			InitMemOffset: 0xffff,
+			InitMem:       []Word{0x1234},
+			ExpRead:       0x1234,
 			ExpCPU:        D16CPU{sp: 0xfffe},
 		},
 		{

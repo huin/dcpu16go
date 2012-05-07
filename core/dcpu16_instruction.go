@@ -275,7 +275,7 @@ type AddInst struct {
 
 func (o *AddInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	result := uint32(b) + uint32(a)
+	result := DWord(b) + DWord(a)
 	o.B.Write(state, Word(result&0xffff))
 	state.WriteEX(Word(result >> 16))
 	return nil
@@ -296,7 +296,7 @@ type SubInst struct {
 
 func (o *SubInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	result := uint32(b) - uint32(a)
+	result := DWord(b) - DWord(a)
 	o.B.Write(state, Word(result&0xffff))
 	state.WriteEX(Word(result >> 16))
 	return nil
@@ -317,7 +317,7 @@ type MulInst struct {
 
 func (o *MulInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	result := uint32(b) * uint32(a)
+	result := DWord(b) * DWord(a)
 	o.B.Write(state, Word(result&0xffff))
 	state.WriteEX(Word(result >> 16))
 	return nil
@@ -342,7 +342,7 @@ func (o *DivInst) Execute(state MachineState) error {
 		o.B.Write(state, 0)
 		state.WriteEX(0)
 	} else {
-		result := (uint32(b) << 16) / uint32(a)
+		result := (DWord(b) << 16) / DWord(a)
 		o.B.Write(state, Word(result>>16))
 		state.WriteEX(Word(result & 0xffff))
 	}
@@ -387,7 +387,7 @@ type ShlInst struct {
 
 func (o *ShlInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	result := uint32(b) << uint32(a)
+	result := DWord(b) << DWord(a)
 	o.B.Write(state, Word(result))
 	state.WriteEX(Word(result >> 16))
 	return nil
@@ -408,7 +408,7 @@ type ShrInst struct {
 
 func (o *ShrInst) Execute(state MachineState) error {
 	a, b := o.A.Read(state), o.B.Read(state)
-	result := (uint32(b) << 16) >> uint32(a)
+	result := (DWord(b) << 16) >> DWord(a)
 	o.B.Write(state, Word(result>>16))
 	state.WriteEX(Word(result & 0xffff))
 	return nil

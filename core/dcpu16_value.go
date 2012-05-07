@@ -223,11 +223,11 @@ type PickValue struct {
 }
 
 func (v *PickValue) Write(state MachineState, word Word) {
-	panic("unimplemented")
+	state.WriteMemory(state.SP()+v.extraWord.Value, word)
 }
 
 func (v *PickValue) Read(state MachineState) Word {
-	panic("unimplemented")
+	return state.ReadMemory(state.SP() + v.extraWord.Value)
 }
 
 func (v *PickValue) Clone() Value {
